@@ -10,3 +10,9 @@ println(nums.join(", "))
 println(nums.filter(fn (num) {
     return num < 3
 }))
+
+nums.each(fn (num) {
+    println(num)
+})
+
+nums.each(println)

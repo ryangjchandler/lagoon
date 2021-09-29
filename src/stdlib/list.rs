@@ -14,6 +14,7 @@ impl ListObject {
             "reverse" => list_reverse,
             "join" => list_join,
             "filter" => list_filter,
+            "each" => list_each,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -60,4 +61,16 @@ fn list_filter(interpreter: &mut Interpreter, context: Value, arguments: Vec<Val
     }).collect();
 
     Value::List(Rc::new(RefCell::new(list)))
+}
+
+fn list_each(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("List.each()", 1, &arguments);
+
+    let callback = arguments.get(0).unwrap().clone();
+
+    for v in context.clone().to_vec().borrow().iter() {
+        interpreter.call(callback.clone(), vec![v.clone()]).to_bool();   
+    }
+
+    context
 }
