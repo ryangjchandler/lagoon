@@ -2,6 +2,7 @@ use hashbrown::HashMap;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::iter::Iterator;
 
 use crate::interpreter::Interpreter;
 use crate::ast::{Block, Parameter, Expression};
@@ -52,6 +53,7 @@ pub enum Value {
         environment: Rc<RefCell<Environment>>,
         definition: Box<Value>,
     },
+    List(Rc<RefCell<Vec<Value>>>),
     Function {
         name: String,
         params: Vec<Parameter>,
@@ -96,6 +98,21 @@ impl Debug for Value {
 
                 fields
             },
+            Value::List(items) => {
+                let mut buffer = String::from("[");
+                let items = items.borrow();
+
+                for (i, item) in items.iter().enumerate() {
+                    buffer.push_str(&item.clone().to_string());
+
+                    if i != items.len() - 1 {
+                        buffer.push_str(", ");
+                    }
+                }
+
+                buffer.push_str("]");
+                buffer
+            },
             Value::Bool(true) => "true".to_string(),
             Value::Bool(false) => "false".to_string(),
             _ => todo!(),
@@ -125,7 +142,7 @@ impl Value {
             Value::Number(n) => n.to_string(),
             Value::Bool(_) => self.to_number().to_string(),
             Value::Null => "".to_string(),
-            v @ Value::Function { .. } | v @ Value::StructInstance { .. } => format!("{:?}", v),
+            v @ Value::Function { .. } | v @ Value::StructInstance { .. } | v @ Value::List(..) => format!("{:?}", v),
             _ => todo!(),
         }
     }

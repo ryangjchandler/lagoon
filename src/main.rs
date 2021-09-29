@@ -15,5 +15,7 @@ fn main() {
     let tokens = token::generate(contents.as_str());
     let ast = parser::parse(tokens).unwrap();
 
+    dbg!(ast.clone());
+
     interpreter::interpret(ast);
 }

@@ -40,7 +40,7 @@ impl Precedence {
         match token {
             Token::Asterisk | Token::Slash => Self::Product,
             Token::Plus | Token::Minus => Self::Sum,
-            Token::LeftParen | Token::Dot => Self::Call,
+            Token::LeftParen | Token::Dot | Token::LeftBracket => Self::Call,
             Token::LessThan | Token::GreaterThan | Token::LessThanOrEquals | Token::GreaterThanOrEquals => Self::LessThanGreaterThan,
             Token::Equals | Token::NotEquals => Self::Equals,
             Token::And | Token::Or => Self::AndOr,
@@ -130,6 +130,23 @@ impl<'p> Parser<'p> {
 
                 Expression::Prefix(Op::token(t), self.parse_expression(Precedence::Prefix)?.boxed())
             },
+            Token::LeftBracket => {
+                self.expect_token_and_read(Token::LeftBracket)?;
+
+                let mut items: Vec<Expression> = Vec::new();
+
+                while ! self.current_is(Token::RightBracket) {
+                    items.push(self.parse_expression(Precedence::Lowest)?);
+
+                    if self.current_is(Token::Comma) {
+                        self.expect_token_and_read(Token::Comma)?;
+                    }
+                }
+
+                self.expect_token_and_read(Token::RightBracket)?;
+
+                Expression::List(items)
+            },
             _ => todo!("{:?}", self.current.clone())
         };
 
@@ -154,6 +171,19 @@ impl<'p> Parser<'p> {
                 let field = self.expect_identifier_and_read()?.into();
 
                 Some(Expression::Get(Box::new(left), field))
+            },
+            Token::LeftBracket => {
+                self.expect_token_and_read(Token::LeftBracket)?;
+
+                let index: Option<Box<Expression>> = if self.current_is(Token::RightBracket) {
+                    None
+                } else {
+                    Some(self.parse_expression(Precedence::Lowest)?.boxed())
+                };
+
+                self.expect_token_and_read(Token::RightBracket)?;
+
+                Some(Expression::Index(left.boxed(), index))
             },
             Token::LeftBrace => {
                 self.expect_token_and_read(Token::LeftBrace)?;

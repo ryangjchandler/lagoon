@@ -1,0 +1,26 @@
+let names = ["Ryan", "John", "Jane"]
+
+println(names)
+
+println(names[0])
+
+names[0] = "Jim"
+
+let name = names[0]
+
+println(name)
+
+names[] = "Nora"
+
+println(names)
+
+let nested = [
+    ["Ryan", "ryan@test.com"],
+    ["John", "john@test.com"]
+]
+
+println(nested)
+
+nested[0][0] = "James"
+
+println(nested)

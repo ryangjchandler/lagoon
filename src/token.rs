@@ -61,6 +61,10 @@ pub enum Token {
     LeftBrace,
     #[token("}")]
     RightBrace,
+    #[token("[")]
+    LeftBracket,
+    #[token("]")]
+    RightBracket,
 
     #[token("+")]
     Plus,

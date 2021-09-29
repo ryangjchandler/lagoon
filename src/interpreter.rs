@@ -120,6 +120,20 @@ impl<'i> Interpreter<'i> {
                     }
                 }
             },
+            Expression::Index(target, index) => {
+                let instance = self.run_expression(*target);
+                let index = self.run_expression(*index.expect("Expected index.")).to_number() as usize;
+
+                match instance {
+                    Value::List(items) => {
+                        match items.borrow().get(index) {
+                            Some(v) => v.clone(),
+                            None => panic!("Undefined index: {}", index)
+                        }
+                    },
+                    _ => unreachable!()
+                }
+            },
             Expression::Get(target, field) => {
                 let instance = self.run_expression(*target.clone());
 
@@ -169,6 +183,11 @@ impl<'i> Interpreter<'i> {
                     (Value::Number(l), Op::Pow, Value::Number(r)) => Value::Number(l.powf(r)),
                     _ => todo!()
                 }
+            },
+            Expression::List(items) => {
+                let items = items.into_iter().map(|i| self.run_expression(i)).collect::<Vec<Value>>();
+
+                Value::List(Rc::new(RefCell::new(items)))
             },
             Expression::Closure(params, body) => {
                 Value::Function {
@@ -289,6 +308,22 @@ impl<'i> Interpreter<'i> {
                 let value = self.run_expression(*value);
 
                 match *target.clone() {
+                    Expression::Index(instance, index) => {
+                        match self.run_expression(*instance) {
+                            Value::List(items) => {
+                                match index {
+                                    Some(i) => {
+                                        let index = self.run_expression(*i).to_number();
+                                        items.borrow_mut()[index as usize] = value.clone();
+                                    },
+                                    None => {
+                                        items.borrow_mut().push(value.clone());
+                                    }
+                                }
+                            },
+                            _ => panic!("You can only assign and append items to lists.")
+                        };
+                    },
                     Expression::Get(instance, field) => {
                         match self.run_expression(*instance) {
                             // TODO: Check if the field exists on the definition before
