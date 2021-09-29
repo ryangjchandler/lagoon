@@ -6,3 +6,8 @@ println(int.isInteger())
 
 println(float.isFloat())
 println(int.isFloat())
+println(float.toFixed())
+
+let crazyFloat = 1.125
+
+println(crazyFloat.toFixed(2))
