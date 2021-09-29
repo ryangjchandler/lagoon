@@ -164,7 +164,11 @@ impl Value {
     pub fn is(self, other: Value) -> bool {
         match (self, other) {
             (Value::String(l), r) => l == r.to_string(),
-            _ => unimplemented!()
+            (Value::Number(n), r) => n == r.to_number(),
+            (Value::Bool(true), r) => r.to_bool() == true,
+            (Value::Bool(false), r) => r.to_bool() == false,
+            (Value::Null, Value::Null) => true,
+            _ => false,
         }
     }
 }
