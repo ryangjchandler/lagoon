@@ -29,6 +29,12 @@ pub enum Statement {
         then: Block,
         otherwise: Option<Block>
     },
+    For {
+        iterable: Expression,
+        value: Identifier,
+        index: Option<Identifier>,
+        then: Block,
+    },
     Expression {
         expression: Expression,
     }
@@ -43,7 +49,6 @@ pub struct Parameter {
 pub enum Expression {
     Number(f64),
     String(String),
-    InterpolatedString(String),
     Bool(bool),
     Null,
     Identifier(Identifier),

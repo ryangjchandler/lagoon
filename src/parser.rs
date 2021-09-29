@@ -74,6 +74,7 @@ impl<'p> Parser<'p> {
             Token::Struct => self.parse_struct(),
             Token::Let => self.parse_let(),
             Token::If => self.parse_if(),
+            Token::For => self.parse_for(),
             Token::Return => {
                 self.expect_token_and_read(Token::Return)?;
 
@@ -87,6 +88,28 @@ impl<'p> Parser<'p> {
         }
     }
 
+    fn parse_for(&mut self) -> Result<Statement, ParseError> {
+        self.expect_token_and_read(Token::For)?;
+
+        let (index, value) = if self.current_is(Token::LeftParen) {
+            self.expect_token_and_read(Token::LeftParen)?;
+            let index = self.expect_identifier_and_read()?;
+            self.expect_token_and_read(Token::Comma)?;
+            let tuple = (Some(index.into()), self.expect_identifier_and_read()?.into());
+            self.expect_token_and_read(Token::RightParen)?;
+            tuple
+        } else {
+            (None, self.expect_identifier_and_read()?.into())
+        };
+
+        self.expect_token_and_read(Token::In)?;
+
+        let iterable = self.parse_expression(Precedence::Statement)?;
+        let then = self.parse_block()?;
+
+        Ok(Statement::For { index, value, iterable, then })
+    }
+
     fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression, ParseError> {
         let mut left = match self.current.clone() {
             Token::String(s) => {
@@ -96,10 +119,6 @@ impl<'p> Parser<'p> {
             Token::Null => {
                 self.expect_token_and_read(Token::Null)?;
                 Expression::Null
-            },
-            Token::InterpolatedString(s) => {
-                self.expect_token_and_read(Token::InterpolatedString("".to_string()))?;
-                Expression::InterpolatedString(s.to_string())
             },
             Token::Number(n) => {
                 self.expect_token_and_read(Token::Number(0.0))?;

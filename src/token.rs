@@ -42,6 +42,10 @@ pub enum Token {
     While,
     #[token("return")]
     Return,
+    #[token("for")]
+    For,
+    #[token("in")]
+    In,
 
     #[regex(r"[a-zA-Z_?]+", to_string)]
     Identifier(String),
@@ -50,8 +54,6 @@ pub enum Token {
     Number(f64),
     #[regex(r##""(?:[^"\\]|\\.)*""##, to_string)]
     String(String),
-    #[regex(r##"\$"(?:[^"\\]|\\.)*""##, to_string)]
-    InterpolatedString(String),
 
     #[token("(")]
     LeftParen,
@@ -194,12 +196,5 @@ mod tests {
         assert_eq!(lexer.next(), Some(Token::String(r##"testing"##.to_owned())));
         assert_eq!(lexer.next(), Some(Token::String(r##"testing with \""##.to_owned())));
         assert_eq!(lexer.next(), Some(Token::String(r##"testing \n"##.to_owned())));
-    }
-
-    #[test]
-    fn it_can_recognise_interpolated_strings() {
-        let mut lexer = Token::lexer(r##"$"testing""##);
-
-        assert_eq!(lexer.next(), Some(Token::InterpolatedString(r##"testing"##.to_owned())));
     }
 }
