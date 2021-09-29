@@ -10,6 +10,7 @@ impl StringObject {
             "startsWith" => string_starts_with,
             "endsWith" => string_ends_with,
             "finish" => string_finish,
+            "append" => string_append,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -66,6 +67,17 @@ fn string_finish(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> 
     if ! string.ends_with(&append) {
         string.push_str(append.as_str());
     }
+
+    Value::String(string)
+}
+
+fn string_append(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.append", 1, &arguments);
+
+    let mut string = context.to_string();
+    let append = arguments[0].clone().to_string();
+
+    string.push_str(append.as_str());
 
     Value::String(string)
 }
