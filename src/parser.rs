@@ -172,6 +172,13 @@ impl<'p> Parser<'p> {
 
                 Some(Expression::Get(Box::new(left), field))
             },
+            Token::LeftBracket => {
+                self.expect_token_and_read(Token::LeftBracket)?;
+
+                let index = self.parse_expression(Precedence::Lowest)?;
+
+                Some(Expression::Index(left.boxed(), index.boxed()))
+            },
             Token::LeftBrace => {
                 self.expect_token_and_read(Token::LeftBrace)?;
 
