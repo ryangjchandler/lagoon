@@ -46,6 +46,8 @@ pub enum Token {
     For,
     #[token("in")]
     In,
+    #[token("not in")]
+    NotIn,
 
     #[regex(r"[a-zA-Z_?]+", to_string)]
     Identifier(String),

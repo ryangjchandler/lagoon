@@ -160,4 +160,11 @@ impl Value {
             _ => false,
         }
     }
+
+    pub fn is(self, other: Value) -> bool {
+        match (self, other) {
+            (Value::String(l), r) => l == r.to_string(),
+            _ => unimplemented!()
+        }
+    }
 }

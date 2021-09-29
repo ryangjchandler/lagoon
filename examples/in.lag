@@ -1,0 +1,21 @@
+let names = ["Ryan", "Jane"]
+
+if "Ryan" in names {
+    println("Ryan is present")
+}
+
+if "Jane" in names {
+    println("Jane is present")
+}
+
+if "John" not in names {
+    println("John is not present")
+}
+
+if "J" in "John" { 
+    println("J exists inside of John")
+}
+
+if "C" not in "John" {
+    println("C does not exist inside of John")
+}

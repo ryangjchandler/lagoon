@@ -200,6 +200,32 @@ impl<'i> Interpreter<'i> {
                     (l, Op::And, r) => Value::Bool(l.to_bool() && r.to_bool()),
                     (l, Op::Or, r) => Value::Bool(l.to_bool() || r.to_bool()),
                     (Value::Number(l), Op::Pow, Value::Number(r)) => Value::Number(l.powf(r)),
+                    (l, Op::In, Value::List(r)) => {
+                        let filtered: Vec<Value> = r.borrow().clone()
+                            .into_iter()
+                            .filter(|v| {
+                                v.clone().is(l.clone())
+                            })
+                            .collect();
+
+                        Value::Bool(! filtered.is_empty())
+                    },
+                    (Value::String(l), Op::In, Value::String(r)) => {
+                        Value::Bool(r.contains(l.as_str()))
+                    },
+                    (l, Op::NotIn, Value::List(r)) => {
+                        let filtered: Vec<Value> = r.borrow().clone()
+                            .into_iter()
+                            .filter(|v| {
+                                v.clone().is(l.clone())
+                            })
+                            .collect();
+
+                        Value::Bool(filtered.is_empty())
+                    },
+                    (Value::String(l), Op::NotIn, Value::String(r)) => {
+                        Value::Bool(! r.contains(l.as_str()))
+                    },
                     _ => todo!()
                 }
             },

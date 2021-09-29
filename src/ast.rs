@@ -91,6 +91,8 @@ pub enum Op {
     And,
     Or,
     Pow,
+    In,
+    NotIn,
 }
 
 impl Op {
@@ -112,6 +114,8 @@ impl Op {
             Token::And => Self::And,
             Token::Or => Self::Or,
             Token::Pow => Self::Pow,
+            Token::In => Self::In,
+            Token::NotIn => Self::NotIn,
             _ => unreachable!("{:?}", token)
         }
     }
