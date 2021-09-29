@@ -16,6 +16,7 @@ impl ListObject {
             "filter" => list_filter,
             "each" => list_each,
             "map" => list_map,
+            "first" => list_first,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -89,4 +90,26 @@ fn list_map(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>
     }
 
     Value::List(Rc::new(RefCell::new(list)))
+}
+
+fn list_first(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    let list = context.clone().to_vec().borrow().clone();
+
+    if list.is_empty() {
+        return Value::Null
+    }
+
+    if arguments.len() == 1 {
+        let callback = arguments.get(0).unwrap().clone();
+
+        for v in list.iter() {
+            let result = interpreter.call(callback.clone(), vec![v.clone()]);
+
+            if result.clone().to_bool() {
+                return v.clone();
+            }
+        }
+    }
+
+    list.first().unwrap().clone()
 }

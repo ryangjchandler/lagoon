@@ -22,3 +22,7 @@ let incrementedNums = nums.map(fn (num) {
 })
 
 println(incrementedNums)
+println(incrementedNums.first())
+println(incrementedNums.first(fn (num) {
+    return num > 3
+}))
