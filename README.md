@@ -1,4 +1,4 @@
-# The Lagoon Language
+# 🏞 The Lagoon Language
 
 <p align="center">
     <img src="./art/splash.jpg">
