@@ -15,6 +15,7 @@ impl ListObject {
             "join" => list_join,
             "filter" => list_filter,
             "each" => list_each,
+            "map" => list_map,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -73,4 +74,19 @@ fn list_each(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value
     }
 
     context
+}
+
+fn list_map(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("List.map()", 1, &arguments);
+
+    let callback = arguments.get(0).unwrap().clone();
+    let mut list = context.clone().to_vec().borrow().clone();
+
+    for (i, v) in list.clone().iter().enumerate() {
+        let result = interpreter.call(callback.clone(), vec![v.clone()]);
+
+        list[i] = result;
+    }
+
+    Value::List(Rc::new(RefCell::new(list)))
 }

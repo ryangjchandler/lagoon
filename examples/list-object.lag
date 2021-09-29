@@ -16,3 +16,9 @@ nums.each(fn (num) {
 })
 
 nums.each(println)
+
+let incrementedNums = nums.map(fn (num) {
+    return num + 1
+})
+
+println(incrementedNums)
