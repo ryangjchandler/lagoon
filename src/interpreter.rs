@@ -120,6 +120,20 @@ impl<'i> Interpreter<'i> {
                     }
                 }
             },
+            Expression::Index(target, index) => {
+                let instance = self.run_expression(*target);
+                let index = self.run_expression(*index).to_number() as usize;
+
+                match instance {
+                    Value::List(items) => {
+                        match items.borrow().get(index) {
+                            Some(v) => v.clone(),
+                            None => panic!("Undefined index: {}", index)
+                        }
+                    },
+                    _ => unreachable!()
+                }
+            },
             Expression::Get(target, field) => {
                 let instance = self.run_expression(*target.clone());
 
