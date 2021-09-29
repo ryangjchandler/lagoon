@@ -308,6 +308,16 @@ impl<'i> Interpreter<'i> {
                 let value = self.run_expression(*value);
 
                 match *target.clone() {
+                    Expression::Index(instance, index) => {
+                        let index = self.run_expression(*index).to_number();
+
+                        match self.run_expression(*instance) {
+                            Value::List(items) => {
+                                items.borrow_mut().insert(index as usize, value.clone());
+                            },
+                            _ => panic!("You can only assign to indexes on lists.")
+                        }
+                    },
                     Expression::Get(instance, field) => {
                         match self.run_expression(*instance) {
                             // TODO: Check if the field exists on the definition before
