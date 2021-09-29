@@ -23,7 +23,6 @@ At the highest level, all operations in Lagoon are parsed as statements. A state
 Lagoon is nowhere near being feature complete or syntax complete. Below is a small checklist of things that we still need to add and design before marking it as "stable".
 
 * [x] `&&`, `||` - Boolean infix operators
-* [x] `$"Hello, {name}"` - String interpolation
 * [x] `>`, `>=`, `<`, `<=` - Mathematical comparison operators
 * [x] `**` - Exponent / power operator
 * [ ] `&`, `|`, `^`, `~`, `<<`, `>>` - Bitwise operators
