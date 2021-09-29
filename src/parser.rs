@@ -43,7 +43,7 @@ impl Precedence {
             Token::LeftParen | Token::Dot | Token::LeftBracket => Self::Call,
             Token::LessThan | Token::GreaterThan | Token::LessThanOrEquals | Token::GreaterThanOrEquals => Self::LessThanGreaterThan,
             Token::Equals | Token::NotEquals => Self::Equals,
-            Token::And | Token::Or => Self::AndOr,
+            Token::And | Token::Or | Token::In | Token::NotIn => Self::AndOr,
             Token::Assign => Self::Assign,
             Token::LeftBrace => Self::Statement,
             Token::Pow => Self::Pow,
@@ -256,7 +256,7 @@ impl<'p> Parser<'p> {
             Token::Plus | Token::Minus | Token::Asterisk | Token::Slash |
             Token::Equals | Token::NotEquals | Token::LessThanOrEquals | Token::LessThan |
             Token::GreaterThan | Token::GreaterThanOrEquals | Token::And | Token::Or |
-            Token::Pow => {
+            Token::Pow | Token::In | Token::NotIn => {
                 let token = self.current.clone();
 
                 self.read();
