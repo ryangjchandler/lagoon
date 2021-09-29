@@ -31,6 +31,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [ ] `for..in` statements
 * [ ] Scalar objects (methods on scalar types)
 * [ ] Module system
+* [ ] Standard Library
 
 ## Contributing
 
