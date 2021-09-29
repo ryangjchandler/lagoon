@@ -153,9 +153,8 @@ impl Value {
 
     pub fn to_bool(self) -> bool {
         match self {
-            Value::Bool(true) => true,
+            Value::Bool(true) | Value::Function { .. } => true,
             Value::String(s) => !s.is_empty(),
-            Value::Function { .. } => true,
             Value::Number(n) => n > 0.0,
             _ => false,
         }
