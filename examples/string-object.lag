@@ -9,3 +9,6 @@ println(name.append(" Chandler"))
 name.tap(fn (raw) {
     println("Tapped value is: " + raw)
 })
+
+println("this should be in uppercase".toUpper())
+println("this should be in lowercase".toLower())

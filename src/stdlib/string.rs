@@ -1,6 +1,5 @@
 use crate::environment::{Value, NativeMethodCallback};
 use crate::interpreter::Interpreter;
-use crate::ast::Expression;
 
 pub struct StringObject;
 
@@ -13,6 +12,8 @@ impl StringObject {
             "finish" => string_finish,
             "append" => string_append,
             "tap" => string_tap,
+            "toUpper" => string_to_upper,
+            "toLower" => string_to_lower,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -99,4 +100,16 @@ fn string_tap(interpreter: &mut Interpreter, context: Value, arguments: Vec<Valu
     interpreter.call(callback, vec![string]);
 
     context
+}
+
+fn string_to_upper(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.toUpper", 0, &arguments);
+
+    Value::String(context.to_string().to_uppercase())
+}
+
+fn string_to_lower(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.toLower", 0, &arguments);
+
+    Value::String(context.to_string().to_lowercase())
 }
