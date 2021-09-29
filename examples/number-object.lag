@@ -1,0 +1,8 @@
+let float = 1.2
+let int = 1
+
+println(float.isInteger())
+println(int.isInteger())
+
+println(float.isFloat())
+println(int.isFloat())

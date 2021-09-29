@@ -2,8 +2,10 @@ use crate::interpreter::Interpreter;
 use crate::environment::Value;
 
 mod string;
+mod number;
 
 pub use string::StringObject;
+pub use number::NumberObject;
 
 pub fn arity(name: &str, arity: usize, arguments: &Vec<Value>) {
     if arity != arguments.len() {

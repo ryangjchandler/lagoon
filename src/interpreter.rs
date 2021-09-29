@@ -212,6 +212,7 @@ impl<'i> Interpreter<'i> {
                         panic!("Undefined static method: {}", field)
                     },
                     Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
+                    Value::Number(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::NumberObject::get(field), context: *target },
                     _ => todo!(),
                 }
             },
