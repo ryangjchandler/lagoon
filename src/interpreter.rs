@@ -170,6 +170,11 @@ impl<'i> Interpreter<'i> {
                     _ => todo!()
                 }
             },
+            Expression::List(items) => {
+                let items = items.into_iter().map(|i| self.run_expression(i)).collect::<Vec<Value>>();
+
+                Value::List(Rc::new(RefCell::new(items)))
+            },
             Expression::Closure(params, body) => {
                 Value::Function {
                     name: String::from("Closure"),

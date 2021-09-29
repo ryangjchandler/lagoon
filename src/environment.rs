@@ -52,6 +52,7 @@ pub enum Value {
         environment: Rc<RefCell<Environment>>,
         definition: Box<Value>,
     },
+    List(Rc<RefCell<Vec<Value>>>),
     Function {
         name: String,
         params: Vec<Parameter>,
