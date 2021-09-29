@@ -9,12 +9,15 @@ impl StringObject {
             "contains" => string_contains,
             "startsWith" => string_starts_with,
             "endsWith" => string_ends_with,
+            "finish" => string_finish,
             _ => panic!("Undefined method: {}", name),
         }
     }
 }
 
 fn string_contains(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.contains", 1, &arguments);
+
     let string = context.to_string();
 
     for argument in arguments {
@@ -27,6 +30,8 @@ fn string_contains(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -
 }
 
 fn string_starts_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.startsWith", 1, &arguments);
+
     let string = context.to_string();
 
     for argument in arguments {
@@ -39,6 +44,8 @@ fn string_starts_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>
 }
 
 fn string_ends_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.endsWith", 1, &arguments);
+
     let string = context.to_string();
 
     for argument in arguments {
@@ -48,4 +55,17 @@ fn string_ends_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) 
     }
 
     Value::Bool(false)
+}
+
+fn string_finish(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.finish", 1, &arguments);
+
+    let mut string = context.to_string();
+    let append = arguments[0].clone().to_string();
+
+    if ! string.ends_with(&append) {
+        string.push_str(append.as_str());
+    }
+
+    Value::String(string)
 }
