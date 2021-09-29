@@ -1,0 +1,3 @@
+println("testing")
+print("testing")
+println(type("testing"))

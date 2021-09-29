@@ -1,0 +1,3 @@
+let negate = -21
+let bang = ! false
+let negate_and_multiply = -1 * 3

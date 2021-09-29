@@ -1,0 +1,7 @@
+let prefix = "Hello, "
+
+let say_hello = fn (name) {
+    println(prefix + name)
+}
+
+say_hello("Ryan")

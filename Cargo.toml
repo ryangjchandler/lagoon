@@ -1,0 +1,12 @@
+[package]
+name = "lagoon"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+logos = "0.12"
+thiserror = "1.0"
+hashbrown = "0.11.2"
+regex = "1.5.4"

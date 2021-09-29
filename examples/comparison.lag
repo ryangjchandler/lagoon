@@ -1,0 +1,11 @@
+if 1 == 1 {
+    println("Equal!")
+}
+
+if 2 != 2 {
+    println("2 is not the same as 2.")
+}
+
+if ! false {
+    println("False is falsy...")
+}

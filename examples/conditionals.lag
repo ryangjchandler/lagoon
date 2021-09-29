@@ -1,0 +1,17 @@
+if true {
+    println("True!")
+} else {
+    println("False!")
+}
+
+if 1 < 2 {
+    println("1 is less than 2.")
+}
+
+if true && true {
+    println("Both are true!")
+}
+
+if true || false {
+    println("First is true, second is false. Or works!")
+}

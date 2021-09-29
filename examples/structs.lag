@@ -1,0 +1,12 @@
+struct Person {
+    name,
+    email
+}
+
+Person.new = fn (name, email) {
+    return Person { name, email }
+}
+
+let person = Person.new("Ryan", "ryan@test.com")
+
+println(person.name)
