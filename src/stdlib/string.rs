@@ -1,5 +1,6 @@
 use crate::environment::{Value, NativeMethodCallback};
 use crate::interpreter::Interpreter;
+use crate::ast::Expression;
 
 pub struct StringObject;
 
@@ -11,6 +12,7 @@ impl StringObject {
             "endsWith" => string_ends_with,
             "finish" => string_finish,
             "append" => string_append,
+            "tap" => string_tap,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -80,4 +82,21 @@ fn string_append(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> 
     string.push_str(append.as_str());
 
     Value::String(string)
+}
+
+fn string_tap(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("String.tap", 1, &arguments);
+
+    let string = context.clone();
+
+    // TODO: Add some better error handling here. Maybe check that
+    // the argument being passed is actually a function.
+    let callback = match arguments.get(0) {
+        Some(f) => f.clone(),
+        _ => unreachable!()
+    };
+
+    interpreter.call(callback, vec![string]);
+
+    context
 }

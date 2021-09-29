@@ -5,3 +5,7 @@ println(name.startsWith("Ry"))
 println(name.endsWith("an"))
 println(name.finish(" Chandler"))
 println(name.append(" Chandler"))
+
+name.tap(fn (raw) {
+    println("Tapped value is: " + raw)
+})
