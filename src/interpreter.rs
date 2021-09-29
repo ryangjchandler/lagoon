@@ -122,7 +122,7 @@ impl<'i> Interpreter<'i> {
             },
             Expression::Index(target, index) => {
                 let instance = self.run_expression(*target);
-                let index = self.run_expression(*index).to_number() as usize;
+                let index = self.run_expression(*index.expect("Expected index.")).to_number() as usize;
 
                 match instance {
                     Value::List(items) => {
@@ -309,14 +309,20 @@ impl<'i> Interpreter<'i> {
 
                 match *target.clone() {
                     Expression::Index(instance, index) => {
-                        let index = self.run_expression(*index).to_number();
-
                         match self.run_expression(*instance) {
                             Value::List(items) => {
-                                items.borrow_mut().insert(index as usize, value.clone());
+                                match index {
+                                    Some(i) => {
+                                        let index = self.run_expression(*i).to_number();
+                                        items.borrow_mut().insert(index as usize, value.clone());
+                                    },
+                                    None => {
+                                        items.borrow_mut().push(value.clone());
+                                    }
+                                }
                             },
-                            _ => panic!("You can only assign to indexes on lists.")
-                        }
+                            _ => panic!("You can only assign and append items to lists.")
+                        };
                     },
                     Expression::Get(instance, field) => {
                         match self.run_expression(*instance) {

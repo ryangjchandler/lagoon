@@ -175,11 +175,15 @@ impl<'p> Parser<'p> {
             Token::LeftBracket => {
                 self.expect_token_and_read(Token::LeftBracket)?;
 
-                let index = self.parse_expression(Precedence::Lowest)?;
+                let index: Option<Box<Expression>> = if self.current_is(Token::RightBracket) {
+                    None
+                } else {
+                    Some(self.parse_expression(Precedence::Lowest)?.boxed())
+                };
 
                 self.expect_token_and_read(Token::RightBracket)?;
 
-                Some(Expression::Index(left.boxed(), index.boxed()))
+                Some(Expression::Index(left.boxed(), index))
             },
             Token::LeftBrace => {
                 self.expect_token_and_read(Token::LeftBrace)?;

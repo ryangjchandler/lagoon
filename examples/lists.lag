@@ -6,4 +6,10 @@ println(names[0])
 
 names[0] = "Jim"
 
-println(names[0])
+let name = names[0]
+
+println(name)
+
+names[] = "Nora"
+
+println(names)
