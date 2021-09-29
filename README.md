@@ -27,7 +27,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] `>`, `>=`, `<`, `<=` - Mathematical comparison operators
 * [x] `**` - Exponent / power operator
 * [ ] `&`, `|`, `^`, `~`, `<<`, `>>` - Bitwise operators
-* [ ] Lists
+* [x] Lists
 * [ ] `for..in` statements
 * [ ] `in`, `not in` operators
 * [ ] Scalar objects (methods on scalar types)
