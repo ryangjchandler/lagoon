@@ -314,7 +314,7 @@ impl<'i> Interpreter<'i> {
                                 match index {
                                     Some(i) => {
                                         let index = self.run_expression(*i).to_number();
-                                        items.borrow_mut().insert(index as usize, value.clone());
+                                        items.borrow_mut()[index as usize] = value.clone();
                                     },
                                     None => {
                                         items.borrow_mut().push(value.clone());

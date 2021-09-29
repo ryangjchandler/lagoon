@@ -10,3 +10,20 @@ Person.new = fn (name, email) {
 let person = Person.new("Ryan", "ryan@test.com")
 
 println(person.name)
+
+struct Nested {
+    person
+}
+
+let nested = Nested {
+    person: Person {
+        name: "Ryan",
+        email: "ryan@test.com",
+    }
+}
+
+println(nested.person.name)
+
+nested.person.name = "James"
+
+println(nested.person.name)

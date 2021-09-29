@@ -13,3 +13,14 @@ println(name)
 names[] = "Nora"
 
 println(names)
+
+let nested = [
+    ["Ryan", "ryan@test.com"],
+    ["John", "john@test.com"]
+]
+
+println(nested)
+
+nested[0][0] = "James"
+
+println(nested)
