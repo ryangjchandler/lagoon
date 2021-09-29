@@ -1,6 +1,20 @@
 use crate::interpreter::Interpreter;
 use crate::environment::Value;
 
+mod string;
+mod number;
+mod list;
+
+pub use string::StringObject;
+pub use number::NumberObject;
+pub use list::ListObject;
+
+pub fn arity(name: &str, arity: usize, arguments: &Vec<Value>) {
+    if arity != arguments.len() {
+        panic!("Method {} expected {} arguments, received {}.", name, arity, arguments.len());
+    }
+}
+
 pub fn println(_: &mut Interpreter, args: Vec<Value>) -> Value {
     let arg = args.get(0).unwrap().clone();
 

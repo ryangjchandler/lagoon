@@ -31,7 +31,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] `in`, `not in` operators
 * [ ] Scalar objects (methods on scalar types)
 * [ ] Module system
-* [ ] Standard Library
+* [x] Standard Library
 * [ ] Nicer error reporting
 * [ ] Transpile to JavaScript (self-hosted)
 

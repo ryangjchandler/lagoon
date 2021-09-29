@@ -113,6 +113,57 @@ impl<'i> Interpreter<'i> {
         })
     }
 
+    pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Value {
+        match callable {
+            Value::NativeFunction { callback, .. } => return callback(self, arguments),
+            Value::NativeMethod { callback, context, .. } => {
+                let context = self.run_expression(context);
+
+                return callback(self, context, arguments);
+            },
+            Value::Function { name, params, body, environment, context } => {
+                if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
+                    panic!("Function {} expects {} arguments, only received {}", name, params.len(), arguments.len());
+                }
+
+                let old_environment = Rc::clone(&self.environment);
+                let new_environment = if environment.is_some() { 
+                    Rc::new(RefCell::new(environment.unwrap()))
+                } else {
+                    Rc::new(RefCell::new(Environment::new()))
+                };
+
+                if context.is_some() && params.first() == Some(&Parameter { name: "self".to_string() }) {
+                    let context = self.run_expression(context.unwrap());
+                    new_environment.borrow_mut().set("self", context);
+                }
+
+                for (Parameter { name, .. }, value) in params.into_iter().filter(|p| p.name != "self").zip(arguments) {
+                    new_environment.borrow_mut().set(name, value);
+                };
+
+                self.environment = new_environment;
+
+                let mut return_value: Option<Value> = None;
+
+                for statement in body {
+                    match self.run_statement(statement) {
+                        Err(InterpreterResult::Return(value)) => {
+                            return_value = Some(value);
+                            break;
+                        },
+                        _ => (),
+                    };
+                }
+
+                self.environment = old_environment;
+
+                if return_value.is_some() { return_value.unwrap() } else { Value::Null }
+            },
+            _ => todo!(),
+        }
+    }
+
     fn run_expression(&mut self, expression: Expression) -> Value {
         match expression {
             Expression::Number(n) => Value::Number(n),
@@ -160,7 +211,10 @@ impl<'i> Interpreter<'i> {
                     } else {
                         panic!("Undefined static method: {}", field)
                     },
-                    _ => unreachable!("{:?}", instance)
+                    Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
+                    Value::Number(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::NumberObject::get(field), context: *target },
+                    Value::List(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::ListObject::get(field), context: *target },
+                    _ => todo!(),
                 }
             },
             Expression::Infix(left, op, right) => {
@@ -296,49 +350,7 @@ impl<'i> Interpreter<'i> {
                 let callable = self.run_expression(*callable);
                 let arguments: Vec<Value> = arguments.into_iter().map(|a| self.run_expression(a)).collect();
 
-                match callable {
-                    Value::NativeFunction { callback, .. } => return callback(self, arguments),
-                    Value::Function { name, params, body, environment, context } => {
-                        if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
-                            panic!("Function {} expects {} arguments, only received {}", name, params.len(), arguments.len());
-                        }
-
-                        let old_environment = Rc::clone(&self.environment);
-                        let new_environment = if environment.is_some() { 
-                            Rc::new(RefCell::new(environment.unwrap()))
-                        } else {
-                            Rc::new(RefCell::new(Environment::new()))
-                        };
-
-                        if context.is_some() && params.first() == Some(&Parameter { name: "self".to_string() }) {
-                            let context = self.run_expression(context.unwrap());
-                            new_environment.borrow_mut().set("self", context);
-                        }
-
-                        for (Parameter { name, .. }, value) in params.into_iter().filter(|p| p.name != "self").zip(arguments) {
-                            new_environment.borrow_mut().set(name, value);
-                        };
-
-                        self.environment = new_environment;
-
-                        let mut return_value: Option<Value> = None;
-
-                        for statement in body {
-                            match self.run_statement(statement) {
-                                Err(InterpreterResult::Return(value)) => {
-                                    return_value = Some(value);
-                                    break;
-                                },
-                                _ => (),
-                            };
-                        }
-
-                        self.environment = old_environment;
-
-                        if return_value.is_some() { return_value.unwrap() } else { Value::Null }
-                    },
-                    _ => todo!(),
-                }
+                self.call(callable, arguments)
             },
             Expression::Prefix(op, right) => {
                 let right = self.run_expression(*right);
