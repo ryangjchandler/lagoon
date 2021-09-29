@@ -33,6 +33,10 @@ impl Environment {
         }
     }
 
+    pub fn drop(&mut self, name: impl Into<String>) {
+        self.values.remove(&name.into());
+    }
+
     pub fn dump(&self) {
         dbg!(self.values.clone());
     }

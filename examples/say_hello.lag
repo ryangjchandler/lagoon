@@ -1,5 +1,5 @@
 fn say_hello(name) {
-    println($"Hello, {name}")
+    println("Hello, " + name)
 }
 
 say_hello("Ryan")

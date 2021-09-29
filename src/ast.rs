@@ -49,7 +49,6 @@ pub struct Parameter {
 pub enum Expression {
     Number(f64),
     String(String),
-    InterpolatedString(String),
     Bool(bool),
     Null,
     Identifier(Identifier),

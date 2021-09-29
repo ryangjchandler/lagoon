@@ -2,7 +2,6 @@ use std::slice::Iter;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
-use regex::{Regex, Replacer};
 
 use crate::ast::*;
 use crate::environment::*;
@@ -59,6 +58,38 @@ impl<'i> Interpreter<'i> {
                     name, fields, methods: Rc::new(RefCell::new(HashMap::new())),
                 });
             },
+            Statement::For { iterable, value, index, then } => {
+                let items = match self.run_expression(iterable) {
+                    Value::List(items) => items,
+                    _ => panic!("You can only iterate over a list."),
+                };
+
+                // If there aren't any items in the list, we can leave this execution
+                // cycle early.
+                if items.borrow().is_empty() {
+                    return Ok(())
+                }
+
+                let set_index: bool = index.is_some();
+
+                for (i, item) in items.borrow().iter().enumerate() {
+                    self.env_mut().set(value.clone(), item.clone());
+
+                    if set_index {
+                        self.env_mut().set(index.clone().unwrap(), Value::Number(i as f64));
+                    }
+
+                    for statement in then.clone() {
+                        self.run_statement(statement)?;
+                    }
+                }
+
+                self.env_mut().drop(value);
+
+                if set_index {
+                    self.env_mut().drop(index.unwrap());
+                }
+            },
             Statement::If { condition, then, otherwise } => {
                 let condition = self.run_expression(condition);
 
@@ -86,28 +117,6 @@ impl<'i> Interpreter<'i> {
         match expression {
             Expression::Number(n) => Value::Number(n),
             Expression::String(s) => Value::String(s),
-            Expression::InterpolatedString(s) => {
-                let re = Regex::new(r"\{((.*|\n)*)\}").unwrap();
-                let replaced = re.replace_all(&s, |captures: &regex::Captures| {
-                    let raw: &str = &captures[1];
-                    let tokens = crate::token::generate(raw);
-                    let expression = match crate::parser::parse(tokens) {
-                        Ok(p) => {
-                            match p.first() {
-                                Some(Statement::Expression { expression }) => expression.clone(),
-                                _ => panic!("Unable to parse interpolated expression.")
-                            }
-                        },
-                        _ => panic!("Unable to parse interpolated expression.")
-                    };
-                    
-                    let value = self.run_expression(expression);
-
-                    value.to_string()
-                }).to_string();
-
-                Value::String(replaced)
-            },
             Expression::Bool(b) => Value::Bool(b),
             Expression::Identifier(n) => {
                 if self.globals.contains_key(&n) {
@@ -163,6 +172,16 @@ impl<'i> Interpreter<'i> {
                     (Value::Number(l), Op::Multiply, Value::Number(r)) => Value::Number(l * r),
                     (Value::Number(l), Op::Divide, Value::Number(r)) => Value::Number(l / r),
                     (Value::Number(l), Op::Subtract, Value::Number(r)) => Value::Number(l - r),
+                    (Value::Number(l), Op::Add, Value::String(r)) => {
+                        let mut l = l.to_string();
+                        l.push_str(r.as_str());
+                        Value::String(l)
+                    },
+                    (Value::String(l), Op::Add, Value::Number(r)) => {
+                        let mut l = l;
+                        l.push_str(r.to_string().as_str());
+                        Value::String(l)
+                    },
                     (Value::String(l), Op::Add, Value::String(r)) => {
                         let mut l = l;
                         l.push_str(r.as_str());
