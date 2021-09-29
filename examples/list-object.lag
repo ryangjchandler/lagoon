@@ -1,0 +1,4 @@
+let empty = []
+
+println(empty.isEmpty())
+

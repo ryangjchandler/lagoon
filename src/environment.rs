@@ -131,6 +131,13 @@ impl Debug for Value {
 }
 
 impl Value {
+    pub fn to_vec(self) -> Rc<RefCell<Vec<Value>>> {
+        match self {
+            Value::List(list) => list,
+            _ => unreachable!()
+        }
+    }
+
     pub fn to_number(self) -> f64 {
         match self {
             Value::Number(n) => n,

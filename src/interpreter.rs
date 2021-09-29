@@ -213,6 +213,7 @@ impl<'i> Interpreter<'i> {
                     },
                     Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
                     Value::Number(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::NumberObject::get(field), context: *target },
+                    Value::List(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::ListObject::get(field), context: *target },
                     _ => todo!(),
                 }
             },
