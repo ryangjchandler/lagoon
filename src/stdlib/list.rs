@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use crate::environment::{Value, NativeMethodCallback};
 use crate::interpreter::Interpreter;
@@ -11,6 +12,7 @@ impl ListObject {
             "isEmpty" => list_is_empty,
             "isNotEmpty" => list_is_not_empty,
             "reverse" => list_reverse,
+            "join" => list_join,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -31,8 +33,18 @@ fn list_is_not_empty(_: &mut Interpreter, context: Value, arguments: Vec<Value>)
 fn list_reverse(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
     super::arity("List.reverse()", 0, &arguments);
 
-    let rc = Rc::clone(&context.to_vec());
-    rc.borrow_mut().reverse();
+    let mut list = context.to_vec().borrow().clone();
+    list.reverse();
 
-    Value::List(rc)
+    Value::List(Rc::new(RefCell::new(list)))
+}
+
+fn list_join(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("List.join()", 1, &arguments);
+
+    let list = context.to_vec().borrow().clone();
+    let separator = arguments.get(0).unwrap().clone().to_string();
+    let result = list.into_iter().map(|a| a.to_string()).collect::<Vec<String>>().join(&separator);
+    
+    Value::String(result)
 }
