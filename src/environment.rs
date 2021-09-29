@@ -8,6 +8,7 @@ use crate::interpreter::Interpreter;
 use crate::ast::{Block, Parameter, Expression};
 
 pub type NativeFunctionCallback = fn (&mut Interpreter, Vec<Value>) -> Value;
+pub type NativeMethodCallback = fn (&mut Interpreter, Value, Vec<Value>) -> Value;
 
 #[derive(Debug, Clone)]
 pub struct Environment {
@@ -69,6 +70,11 @@ pub enum Value {
         name: String,
         callback: NativeFunctionCallback,
     },
+    NativeMethod {
+        name: String,
+        callback: NativeMethodCallback,
+        context: Expression,
+    }
 }
 
 impl Debug for Value {

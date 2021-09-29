@@ -1,0 +1,5 @@
+let name = "Ryan"
+
+println(name.contains("Ry"))
+println(name.startsWith("Ry"))
+println(name.endsWith("an"))

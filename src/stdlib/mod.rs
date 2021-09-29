@@ -1,6 +1,10 @@
 use crate::interpreter::Interpreter;
 use crate::environment::Value;
 
+mod string;
+
+pub use string::StringObject;
+
 pub fn println(_: &mut Interpreter, args: Vec<Value>) -> Value {
     let arg = args.get(0).unwrap().clone();
 

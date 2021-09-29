@@ -160,7 +160,8 @@ impl<'i> Interpreter<'i> {
                     } else {
                         panic!("Undefined static method: {}", field)
                     },
-                    _ => unreachable!("{:?}", instance)
+                    Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
+                    _ => todo!(),
                 }
             },
             Expression::Infix(left, op, right) => {
@@ -298,6 +299,11 @@ impl<'i> Interpreter<'i> {
 
                 match callable {
                     Value::NativeFunction { callback, .. } => return callback(self, arguments),
+                    Value::NativeMethod { callback, context, .. } => {
+                        let context = self.run_expression(context);
+
+                        return callback(self, context, arguments);
+                    },
                     Value::Function { name, params, body, environment, context } => {
                         if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
                             panic!("Function {} expects {} arguments, only received {}", name, params.len(), arguments.len());
