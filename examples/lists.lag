@@ -1,4 +1,5 @@
 let names = ["Ryan", "John", "Jane"]
 
 println(names)
+
 println(names[0])

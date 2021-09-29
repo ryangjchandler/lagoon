@@ -40,7 +40,7 @@ impl Precedence {
         match token {
             Token::Asterisk | Token::Slash => Self::Product,
             Token::Plus | Token::Minus => Self::Sum,
-            Token::LeftParen | Token::Dot => Self::Call,
+            Token::LeftParen | Token::Dot | Token::LeftBracket => Self::Call,
             Token::LessThan | Token::GreaterThan | Token::LessThanOrEquals | Token::GreaterThanOrEquals => Self::LessThanGreaterThan,
             Token::Equals | Token::NotEquals => Self::Equals,
             Token::And | Token::Or => Self::AndOr,
@@ -176,6 +176,8 @@ impl<'p> Parser<'p> {
                 self.expect_token_and_read(Token::LeftBracket)?;
 
                 let index = self.parse_expression(Precedence::Lowest)?;
+
+                self.expect_token_and_read(Token::RightBracket)?;
 
                 Some(Expression::Index(left.boxed(), index.boxed()))
             },
