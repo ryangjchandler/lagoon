@@ -130,6 +130,23 @@ impl<'p> Parser<'p> {
 
                 Expression::Prefix(Op::token(t), self.parse_expression(Precedence::Prefix)?.boxed())
             },
+            Token::LeftBracket => {
+                self.expect_token_and_read(Token::LeftBracket)?;
+
+                let mut items: Vec<Expression> = Vec::new();
+
+                while ! self.current_is(Token::RightBracket) {
+                    items.push(self.parse_expression(Precedence::Lowest)?);
+
+                    if self.current_is(Token::Comma) {
+                        self.expect_token_and_read(Token::Comma)?;
+                    }
+                }
+
+                self.expect_token_and_read(Token::RightBracket)?;
+
+                Expression::List(items)
+            },
             _ => todo!("{:?}", self.current.clone())
         };
 

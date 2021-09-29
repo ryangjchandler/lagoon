@@ -54,6 +54,7 @@ pub enum Expression {
     Struct(Box<Expression>, HashMap<Identifier, Expression>),
     Closure(Vec<Parameter>, Vec<Statement>),
     Get(Box<Expression>, Identifier),
+    List(Vec<Expression>),
 }
 
 impl Expression {
