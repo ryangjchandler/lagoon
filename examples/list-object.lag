@@ -6,3 +6,7 @@ let nums = [1, 2, 3, 4, 5]
 
 println(nums.reverse())
 println(nums.join(", "))
+
+println(nums.filter(fn (num) {
+    return num < 3
+}))

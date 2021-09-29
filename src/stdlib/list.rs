@@ -13,6 +13,7 @@ impl ListObject {
             "isNotEmpty" => list_is_not_empty,
             "reverse" => list_reverse,
             "join" => list_join,
+            "filter" => list_filter,
             _ => panic!("Undefined method: {}", name),
         }
     }
@@ -47,4 +48,16 @@ fn list_join(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Valu
     let result = list.into_iter().map(|a| a.to_string()).collect::<Vec<String>>().join(&separator);
     
     Value::String(result)
+}
+
+fn list_filter(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+    super::arity("List.filter()", 1, &arguments);
+
+    let callback = arguments.get(0).unwrap().clone();
+
+    let list: Vec<Value> = context.to_vec().borrow().clone().into_iter().filter(|v| {
+        interpreter.call(callback.clone(), vec![v.clone()]).to_bool()
+    }).collect();
+
+    Value::List(Rc::new(RefCell::new(list)))
 }
