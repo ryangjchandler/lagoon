@@ -29,6 +29,12 @@ pub enum Statement {
         then: Block,
         otherwise: Option<Block>
     },
+    For {
+        iterable: Expression,
+        value: Identifier,
+        index: Option<Identifier>,
+        then: Block,
+    },
     Expression {
         expression: Expression,
     }

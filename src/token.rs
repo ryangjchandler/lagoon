@@ -42,6 +42,10 @@ pub enum Token {
     While,
     #[token("return")]
     Return,
+    #[token("for")]
+    For,
+    #[token("in")]
+    In,
 
     #[regex(r"[a-zA-Z_?]+", to_string)]
     Identifier(String),

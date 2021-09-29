@@ -74,6 +74,7 @@ impl<'p> Parser<'p> {
             Token::Struct => self.parse_struct(),
             Token::Let => self.parse_let(),
             Token::If => self.parse_if(),
+            Token::For => self.parse_for(),
             Token::Return => {
                 self.expect_token_and_read(Token::Return)?;
 
@@ -85,6 +86,19 @@ impl<'p> Parser<'p> {
             },
             _ => Ok(Statement::Expression{ expression: self.parse_expression(Precedence::Lowest)? }),
         }
+    }
+
+    fn parse_for(&mut self) -> Result<Statement, ParseError> {
+        self.expect_token_and_read(Token::For)?;
+
+        let (index, value) = (None, self.expect_identifier_and_read()?.into());
+
+        self.expect_token_and_read(Token::In)?;
+
+        let iterable = self.parse_expression(Precedence::Statement)?;
+        let then = self.parse_block()?;
+
+        Ok(Statement::For { index, value, iterable, then })
     }
 
     fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression, ParseError> {
