@@ -1,1 +1,3 @@
 let names = ["Ryan", "John", "Jane"]
+
+println(names)
