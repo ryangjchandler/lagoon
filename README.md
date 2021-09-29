@@ -18,7 +18,7 @@ The generated AST is then passed to an interpreter. It uses a tree-walk approach
 
 At the highest level, all operations in Lagoon are parsed as statements. A statement can contain one or more expressions. Those expressions are generally used to manipulate the execution environment and provide information to your script.
 
-## Feature List
+## Development Checklist
 
 Lagoon is nowhere near being feature complete or syntax complete. Below is a small checklist of things that we still need to add and design before marking it as "stable".
 
