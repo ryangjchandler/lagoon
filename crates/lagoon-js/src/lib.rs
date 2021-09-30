@@ -234,6 +234,14 @@ fn op_to_string(op: Op) -> Result<&'static str, TranspilerError> {
         Op::LessThanOrEquals => "<=",
         Op::GreaterThan => ">",
         Op::GreaterThanOrEquals => ">=",
+        Op::Modulo => "%",
+        Op::Pow => "**",
+        Op::Bang => "!",
+        Op::Equals => "==",
+        Op::NotEquals => "!=",
+        Op::Assign => "=",
+        Op::And => "&&",
+        Op::Or => "||",
         _ => return Err(TranspilerError::NotImplementedOperator(op)),
     })
 }
