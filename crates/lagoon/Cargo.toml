@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 lagoon_parser = { path = "../lagoon-parser" }
 lagoon_interpreter = { path = "../lagoon-interpreter" }
+lagoon_js = { path = "../lagoon-js" }
 thiserror = "1.0"
 clap = "3.0.0-beta.4"
 colored = "2"

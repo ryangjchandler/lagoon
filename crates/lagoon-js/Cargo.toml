@@ -1,5 +1,5 @@
 [package]
-name = "lagoon-js"
+name = "lagoon_js"
 version = "0.1.0"
 edition = "2018"
 
@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 lagoon_parser = { path = "../lagoon-parser" }
+thiserror = "1.0"
+colored = "2"

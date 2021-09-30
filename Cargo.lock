@@ -151,15 +151,9 @@ dependencies = [
  "clap",
  "colored",
  "lagoon_interpreter",
+ "lagoon_js",
  "lagoon_parser",
  "thiserror",
-]
-
-[[package]]
-name = "lagoon-js"
-version = "0.1.0"
-dependencies = [
- "lagoon_parser",
 ]
 
 [[package]]
@@ -168,6 +162,15 @@ version = "0.1.0"
 dependencies = [
  "colored",
  "hashbrown",
+ "lagoon_parser",
+ "thiserror",
+]
+
+[[package]]
+name = "lagoon_js"
+version = "0.1.0"
+dependencies = [
+ "colored",
  "lagoon_parser",
  "thiserror",
 ]
