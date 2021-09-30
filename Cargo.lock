@@ -156,6 +156,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "lagoon-js"
+version = "0.1.0"
+dependencies = [
+ "lagoon_parser",
+]
+
+[[package]]
 name = "lagoon_interpreter"
 version = "0.1.0"
 dependencies = [

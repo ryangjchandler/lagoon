@@ -1,5 +1,5 @@
 use std::fs::read_to_string;
-use clap::{Arg, App};
+use clap::{Arg, App, AppSettings};
 
 use lagoon_parser::{generate, parse};
 use lagoon_interpreter::{interpret};
@@ -11,6 +11,7 @@ fn main() {
         .version(VERSION)
         .author("Ryan Chandler <lagoon@ryangjchandler.co.uk>")
         .about("The official interpreter for Lagoon.")
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(
             App::new("run")
                 .about("Run a Lagoon file.")

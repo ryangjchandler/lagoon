@@ -2,5 +2,6 @@
 members = [
     "./crates/lagoon",
     "./crates/lagoon-parser",
-    "./crates/lagoon-interpreter"
+    "./crates/lagoon-interpreter",
+    "./crates/lagoon-js"
 ]
