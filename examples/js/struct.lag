@@ -1,0 +1,8 @@
+struct Person {
+    name,
+    email
+}
+
+let Ryan = Person { name: "Ryan", email: "test@test.com" }
+
+println(Ryan, Ryan.name, Ryan.email)

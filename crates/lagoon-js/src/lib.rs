@@ -50,6 +50,20 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
             }
             js.push_str(";");
         },
+        Statement::StructDeclaration { name, fields } => {
+            js.push_str("class ");
+            js.push_str(&name);
+            js.push_str(" {\n");
+            
+            for field in fields.clone() {
+                js.push_str(&field.name);
+                js.push_str(";\n");
+            }
+
+            struct_constructor(js, "constructor", &fields.into_iter().map(|p| p.name).collect::<Vec<String>>()[..])?;
+            
+            js.push_str("\n}");
+        },
         Statement::FunctionDeclaration { name, params, body } => {
             js.push_str("function ");
             js.push_str(&name);
@@ -79,7 +93,26 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
         _ => return Err(TranspilerError::NotImplementedStatement(statement)),
     };
 
-    js.push(';');
+    js.push_str(";\n");
+
+    Ok(())
+}
+
+fn struct_constructor(js: &mut String, method: &str, parameters: &[String]) -> Result<(), TranspilerError> {
+    js.push_str(method);
+    js.push_str(" ({");
+    js.push_str(&parameters.join(", "));
+    js.push_str("}) {\n");
+
+    for parameter in parameters {
+        js.push_str("this.");
+        js.push_str(parameter);
+        js.push_str("=");
+        js.push_str(parameter);
+        js.push_str(";\n");
+    }
+
+    js.push_str("}");
 
     Ok(())
 }
@@ -137,6 +170,25 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
             transpile_expression(js, *left)?;
             js.push_str(op_to_string(op)?);
             transpile_expression(js, *right)?;
+        },
+        Expression::Struct(target, fields) => {
+            js.push_str("new ");
+            transpile_expression(js, *target)?;
+            js.push_str("({\n");
+
+            for (field, value) in fields {
+                js.push_str(&field);
+                js.push_str(": ");
+                transpile_expression(js, value)?;
+                js.push_str(",\n");
+            }
+
+            js.push_str("\n})");
+        },
+        Expression::Get(instance, field) => {
+            transpile_expression(js, *instance)?;
+            js.push_str(".");
+            js.push_str(&field);
         },
         _ => return Err(TranspilerError::NotImplementedExpression(expression))
     };

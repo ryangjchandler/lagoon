@@ -1,5 +1,7 @@
 function println(...args) {
-    console.log(...args)
+    args.forEach(arg => {
+        console.log(arg);
+    });
 };
 const print = println;
 function type(value) {
