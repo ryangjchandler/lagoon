@@ -206,6 +206,12 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
 
             js.push_str("\n})");
         },
+        Expression::Closure(params, body) => {
+            js.push_str("(");
+            js.push_str(&params.into_iter().map(|p| p.name).collect::<Vec<String>>().join(", "));
+            js.push_str(") => ");
+            transpile_block(js, body)?;
+        },
         Expression::Get(instance, field) => {
             transpile_expression(js, *instance)?;
             js.push_str(".");
