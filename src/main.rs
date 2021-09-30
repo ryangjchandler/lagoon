@@ -33,8 +33,18 @@ fn main() {
         let contents = read_to_string(file).unwrap();
 
         let tokens = token::generate(contents.as_str());
-        let ast = parser::parse(tokens).unwrap();
-
-        interpreter::interpret(ast);
+        match parser::parse(tokens) {
+            Ok(ast) => {
+                match interpreter::interpret(ast) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        e.print();
+                    }
+                };
+            },
+            Err(e) => {
+                e.print();
+            },
+        };
     }
 }

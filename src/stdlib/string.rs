@@ -1,5 +1,5 @@
 use crate::environment::{Value, NativeMethodCallback};
-use crate::interpreter::Interpreter;
+use crate::interpreter::{Interpreter, InterpreterResult};
 
 pub struct StringObject;
 
@@ -19,49 +19,49 @@ impl StringObject {
     }
 }
 
-fn string_contains(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_contains(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.contains", 1, &arguments);
 
     let string = context.to_string();
 
     for argument in arguments {
         if string.contains(&argument.to_string()) {
-            return Value::Bool(true);
+            return Ok(Value::Bool(true));
         }
     }
 
-    Value::Bool(false)
+    Ok(Value::Bool(false))
 }
 
-fn string_starts_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_starts_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.startsWith", 1, &arguments);
 
     let string = context.to_string();
 
     for argument in arguments {
         if string.starts_with(&argument.to_string()) {
-            return Value::Bool(true);
+            return Ok(Value::Bool(true));
         }
     }
 
-    Value::Bool(false)
+    Ok(Value::Bool(false))
 }
 
-fn string_ends_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_ends_with(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.endsWith", 1, &arguments);
 
     let string = context.to_string();
 
     for argument in arguments {
         if string.ends_with(&argument.to_string()) {
-            return Value::Bool(true);
+            return Ok(Value::Bool(true));
         }
     }
 
-    Value::Bool(false)
+    Ok(Value::Bool(false))
 }
 
-fn string_finish(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_finish(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.finish", 1, &arguments);
 
     let mut string = context.to_string();
@@ -71,10 +71,10 @@ fn string_finish(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> 
         string.push_str(append.as_str());
     }
 
-    Value::String(string)
+    Ok(Value::String(string))
 }
 
-fn string_append(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_append(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.append", 1, &arguments);
 
     let mut string = context.to_string();
@@ -82,10 +82,10 @@ fn string_append(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> 
 
     string.push_str(append.as_str());
 
-    Value::String(string)
+    Ok(Value::String(string))
 }
 
-fn string_tap(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_tap(interpreter: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.tap", 1, &arguments);
 
     let string = context.clone();
@@ -97,19 +97,19 @@ fn string_tap(interpreter: &mut Interpreter, context: Value, arguments: Vec<Valu
         _ => unreachable!()
     };
 
-    interpreter.call(callback, vec![string]);
+    interpreter.call(callback, vec![string])?;
 
-    context
+    Ok(context)
 }
 
-fn string_to_upper(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_to_upper(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.toUpper", 0, &arguments);
 
-    Value::String(context.to_string().to_uppercase())
+    Ok(Value::String(context.to_string().to_uppercase()))
 }
 
-fn string_to_lower(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Value {
+fn string_to_lower(_: &mut Interpreter, context: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
     super::arity("String.toLower", 0, &arguments);
 
-    Value::String(context.to_string().to_lowercase())
+    Ok(Value::String(context.to_string().to_lowercase()))
 }

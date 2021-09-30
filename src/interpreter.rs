@@ -2,22 +2,57 @@ use std::slice::Iter;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
+use thiserror::Error;
+use colored::*;
 
 use crate::ast::*;
 use crate::environment::*;
 
-pub fn interpret(ast: Program) {
+pub fn interpret(ast: Program) -> Result<(), InterpreterResult> {
     let mut interpreter = Interpreter::new(ast.iter());
 
     interpreter.define_global_function("println", crate::stdlib::println);
     interpreter.define_global_function("print", crate::stdlib::print);
     interpreter.define_global_function("type", crate::stdlib::r#type);
 
-    interpreter.run();
+    interpreter.run()
 }
 
-enum InterpreterResult {
+#[derive(Error, Debug)]
+pub enum InterpreterResult {
+    #[error("")]
     Return(Value),
+
+    #[error("Undefined variable: {0}.")]
+    UndefinedVariable(String),
+
+    #[error("Undefined index: {0}.")]
+    UndefinedIndex(usize),
+
+    #[error("Undefined field: {0}.{1}")]
+    UndefinedField(String, String),
+
+    #[error("Undefined method: {0}.{1}()")]
+    UndefinedMethod(String, String),
+
+    #[error("Unable to iterate over value of type {0}.")]
+    InvalidIterable(String),
+
+    #[error("Too few arguments to function {0}(), {1} passed in, {2} expected.")]
+    TooFewArguments(String, usize, usize),
+
+    #[error("Cannot append to value of type {0}.")]
+    InvalidAppendTarget(String),
+
+    #[error("Cannot assign method to static property of type {0}.")]
+    InvalidMethodAssignmentTarget(String),
+}
+
+impl InterpreterResult {
+    pub fn print(self) {
+        eprintln!("{}", format!("{}", self).red().bold());
+        std::process::exit(1);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -43,7 +78,7 @@ impl<'i> Interpreter<'i> {
                     self.env_mut().set(name, Value::Null)
                 } else {
                     let initial = initial.unwrap();
-                    let value = self.run_expression(initial);
+                    let value = self.run_expression(initial)?;
 
                     self.env_mut().set(name, value)
                 }
@@ -59,9 +94,11 @@ impl<'i> Interpreter<'i> {
                 });
             },
             Statement::For { iterable, value, index, then } => {
-                let items = match self.run_expression(iterable) {
+                let iterable = self.run_expression(iterable)?;
+
+                let items = match iterable {
                     Value::List(items) => items,
-                    _ => panic!("You can only iterate over a list."),
+                    _ => return Err(InterpreterResult::InvalidIterable(iterable.typestring())),
                 };
 
                 // If there aren't any items in the list, we can leave this execution
@@ -91,7 +128,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Statement::If { condition, then, otherwise } => {
-                let condition = self.run_expression(condition);
+                let condition = self.run_expression(condition)?;
 
                 if condition.to_bool() {
                     for statement in then {
@@ -104,26 +141,26 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Statement::Expression { expression } => {
-                self.run_expression(expression);
+                self.run_expression(expression)?;
             },
             Statement::Return { value } => {
-                return Err(InterpreterResult::Return(self.run_expression(value)));
+                return Err(InterpreterResult::Return(self.run_expression(value)?));
             },
             _ => todo!("{:?}", statement),
         })
     }
 
-    pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Value {
-        match callable {
-            Value::NativeFunction { callback, .. } => return callback(self, arguments),
+    pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
+        Ok(match callable {
+            Value::NativeFunction { callback, .. } => callback(self, arguments),
             Value::NativeMethod { callback, context, .. } => {
-                let context = self.run_expression(context);
+                let context = self.run_expression(context)?;
 
-                return callback(self, context, arguments);
+                callback(self, context, arguments)?
             },
             Value::Function { name, params, body, environment, context } => {
                 if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
-                    panic!("Function {} expects {} arguments, only received {}", name, params.len(), arguments.len());
+                    return Err(InterpreterResult::TooFewArguments(name.clone(), arguments.len(), params.len()));
                 }
 
                 let old_environment = Rc::clone(&self.environment);
@@ -134,7 +171,7 @@ impl<'i> Interpreter<'i> {
                 };
 
                 if context.is_some() && params.first() == Some(&Parameter { name: "self".to_string() }) {
-                    let context = self.run_expression(context.unwrap());
+                    let context = self.run_expression(context.unwrap())?;
                     new_environment.borrow_mut().set("self", context);
                 }
 
@@ -161,11 +198,11 @@ impl<'i> Interpreter<'i> {
                 if return_value.is_some() { return_value.unwrap() } else { Value::Null }
             },
             _ => todo!(),
-        }
+        })
     }
 
-    fn run_expression(&mut self, expression: Expression) -> Value {
-        match expression {
+    fn run_expression(&mut self, expression: Expression) -> Result<Value, InterpreterResult> {
+        Ok(match expression {
             Expression::Number(n) => Value::Number(n),
             Expression::String(s) => Value::String(s),
             Expression::Bool(b) => Value::Bool(b),
@@ -176,40 +213,45 @@ impl<'i> Interpreter<'i> {
                     if let Some(v) = self.env().get(n.clone()) {
                         v
                     } else {
-                        panic!("Undefined variable: {}", n);
+                        return Err(InterpreterResult::UndefinedVariable(n));
                     }
                 }
             },
             Expression::Index(target, index) => {
-                let instance = self.run_expression(*target);
-                let index = self.run_expression(*index.expect("Expected index.")).to_number() as usize;
+                let instance = self.run_expression(*target)?;
+                let index = self.run_expression(*index.expect("Expected index."))?.to_number() as usize;
 
                 match instance {
                     Value::List(items) => {
                         match items.borrow().get(index) {
                             Some(v) => v.clone(),
-                            None => panic!("Undefined index: {}", index)
+                            None => return Err(InterpreterResult::UndefinedIndex(index))
                         }
                     },
                     _ => unreachable!()
                 }
             },
             Expression::Get(target, field) => {
-                let instance = self.run_expression(*target.clone());
+                let instance = self.run_expression(*target.clone())?;
 
                 match instance {
-                    Value::StructInstance { environment, .. } => if let Some(value) = environment.borrow().get(field.clone()) {
+                    Value::StructInstance { environment, definition, .. } => if let Some(value) = environment.borrow().get(field.clone()) {
                         match value {
                             Value::Function { name, params, body, environment, .. } => Value::Function { name, params, body, environment, context: Some(*target) },
                             _ => value,
                         }
                     } else {
-                        panic!("Undefined field / method: {}", field)
+                        let name = match *definition {
+                            Value::Struct { name, .. } => name,
+                            _ => unreachable!()
+                        };
+
+                        return Err(InterpreterResult::UndefinedField(name, field))
                     },
-                    Value::Struct { methods, .. } => if let Some(value) = methods.borrow().get(&field.clone()) {
+                    Value::Struct { name, methods, .. } => if let Some(value) = methods.borrow().get(&field.clone()) {
                         value.clone()
                     } else {
-                        panic!("Undefined static method: {}", field)
+                        return Err(InterpreterResult::UndefinedMethod(name, field))
                     },
                     Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
                     Value::Number(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::NumberObject::get(field), context: *target },
@@ -218,8 +260,8 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Infix(left, op, right) => {
-                let left = self.run_expression(*left);
-                let right = self.run_expression(*right);
+                let left = self.run_expression(*left)?;
+                let right = self.run_expression(*right)?;
 
                 match (left, op, right) {
                     (Value::Number(l), Op::Add, Value::Number(r)) => Value::Number(l + r),
@@ -284,9 +326,13 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::List(items) => {
-                let items = items.into_iter().map(|i| self.run_expression(i)).collect::<Vec<Value>>();
+                let mut values: Vec<Value> = Vec::new();
 
-                Value::List(Rc::new(RefCell::new(items)))
+                for item in items.into_iter() {
+                    values.push(self.run_expression(item)?);
+                }
+
+                Value::List(Rc::new(RefCell::new(values)))
             },
             Expression::Closure(params, body) => {
                 Value::Function {
@@ -298,7 +344,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Struct(definition, fields) => {
-                let definition = self.run_expression(*definition);
+                let definition = self.run_expression(*definition)?;
 
                 let (name, field_definitions, methods) = match definition.clone() {
                     Value::Struct { name, fields, methods } => (name, fields, methods),
@@ -309,10 +355,10 @@ impl<'i> Interpreter<'i> {
 
                 for (field, value) in fields {
                     if ! field_definitions.contains(&Parameter { name: field.clone() }) {
-                        panic!("The definition of structure {} does not contain a field named {}.", name, field.clone());
+                        return Err(InterpreterResult::UndefinedField(name, field.clone()));
                     }
 
-                    let value = self.run_expression(value);
+                    let value = self.run_expression(value)?;
 
                     environment.set(field, match value {
                         Value::StructInstance { environment, definition } => {
@@ -347,13 +393,17 @@ impl<'i> Interpreter<'i> {
                 Value::StructInstance { environment, definition: Box::new(definition) }
             },
             Expression::Call(callable, arguments) => {
-                let callable = self.run_expression(*callable);
-                let arguments: Vec<Value> = arguments.into_iter().map(|a| self.run_expression(a)).collect();
+                let callable = self.run_expression(*callable)?;
+                let mut argument_values: Vec<Value> = Vec::new();
 
-                self.call(callable, arguments)
+                for argument in arguments.into_iter() {
+                    argument_values.push(self.run_expression(argument)?);
+                }
+
+                self.call(callable, argument_values)?
             },
             Expression::Prefix(op, right) => {
-                let right = self.run_expression(*right);
+                let right = self.run_expression(*right)?;
 
                 match op {
                     Op::Bang => Value::Bool(! right.to_bool()),
@@ -362,15 +412,17 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Assign(target, value) => {
-                let value = self.run_expression(*value);
+                let value = self.run_expression(*value)?;
 
                 match *target.clone() {
                     Expression::Index(instance, index) => {
-                        match self.run_expression(*instance) {
+                        let instance = self.run_expression(*instance)?;
+
+                        match instance {
                             Value::List(items) => {
                                 match index {
                                     Some(i) => {
-                                        let index = self.run_expression(*i).to_number();
+                                        let index = self.run_expression(*i)?.to_number();
                                         items.borrow_mut()[index as usize] = value.clone();
                                     },
                                     None => {
@@ -378,11 +430,13 @@ impl<'i> Interpreter<'i> {
                                     }
                                 }
                             },
-                            _ => panic!("You can only assign and append items to lists.")
+                            _ => return Err(InterpreterResult::InvalidAppendTarget(instance.typestring()))
                         };
                     },
                     Expression::Get(instance, field) => {
-                        match self.run_expression(*instance) {
+                        let instance = self.run_expression(*instance)?;
+
+                        match instance.clone() {
                             // TODO: Check if the field exists on the definition before
                             // actually doing the assignment.
                             Value::StructInstance { environment, .. } => {
@@ -390,12 +444,12 @@ impl<'i> Interpreter<'i> {
                             },
                             Value::Struct { methods, .. } => {
                                 if ! matches!(value.clone(), Value::Function { .. }) {
-                                    panic!("Can only assign methods to static properties on a structure.")
+                                    return Err(InterpreterResult::InvalidMethodAssignmentTarget(instance.typestring()))
                                 } else {
                                     methods.borrow_mut().insert(field, value.clone());
                                 }
                             },
-                            _ => todo!()
+                            _ => return Err(InterpreterResult::InvalidMethodAssignmentTarget(instance.typestring()))
                         };
                     },
                     Expression::Identifier(i) => {
@@ -407,7 +461,7 @@ impl<'i> Interpreter<'i> {
                 value
             },
             _ => todo!("{:?}", expression),
-        }
+        })
     }
 
     fn define_global_function(&mut self, name: impl Into<String>, callback: NativeFunctionCallback) {
@@ -427,14 +481,16 @@ impl<'i> Interpreter<'i> {
         RefCell::borrow_mut(&self.environment)
     }
 
-    fn run(&mut self) {
+    fn run(&mut self) -> Result<(), InterpreterResult> {
         while let Some(statement) = self.ast.next() {
-            let _r = self.run_statement(statement.clone());
+            let _r = self.run_statement(statement.clone())?;
         }
 
         if ! ::std::env::args().filter(|a| a == "--debug").collect::<Vec<String>>().is_empty() {
             self.env().dump();
             dbg!(self.globals.clone());
         }
+
+        Ok(())
     }
 }

@@ -1,0 +1,22 @@
+let test = "cool"
+
+test.example = fn () {}
+
+struct Person {
+    name
+}
+
+let string = "testing"
+string[] = "c"
+
+Person { email: "testing" }
+
+let string = "testing"
+
+for c in string {
+
+}
+
+let person = Person { name: "Ryan" }
+
+println(person.email)
