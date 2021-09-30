@@ -27,7 +27,7 @@ pub enum InterpreterResult {
     UndefinedVariable(String),
 
     #[error("Undefined index: {0}.")]
-    UndefinedIndex(String),
+    UndefinedIndex(usize),
 }
 
 impl InterpreterResult {
@@ -205,7 +205,7 @@ impl<'i> Interpreter<'i> {
                     Value::List(items) => {
                         match items.borrow().get(index) {
                             Some(v) => v.clone(),
-                            None => return Err(InterpreterResult::UndefinedIndex(format!("{}", index)))
+                            None => return Err(InterpreterResult::UndefinedIndex(index))
                         }
                     },
                     _ => unreachable!()
