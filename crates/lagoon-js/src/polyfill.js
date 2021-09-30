@@ -28,3 +28,17 @@ function __lagoon_register_method(target, name, callback, instance = false) {
         target[name] = callback
     }
 }
+Array.prototype.isEmpty = function () {
+    return this.length <= 0
+}
+Array.prototype.each = function (callback) {
+    return this.forEach((item) => callback(item))
+}
+Array.prototype.first = function (callback = undefined) {
+    return (callback ? this.find(item => callback(item)) : this[0]) ?? null
+}
+const __lagoon_og_array_reverse = Array.prototype.reverse
+Array.prototype.reverse = function () {
+    return __lagoon_og_array_reverse.call([...this])
+}
+;
