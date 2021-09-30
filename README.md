@@ -35,6 +35,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [ ] Nicer error reporting
 * [ ] Transpile to JavaScript (self-hosted)
 * [x] Nicer command-line interface
+* [ ] Migrate parser to on-demand token stream
 
 ## Contributing
 
