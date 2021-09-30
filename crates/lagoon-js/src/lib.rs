@@ -41,6 +41,21 @@ pub fn transpile(ast: Program) -> Result<String, TranspilerError> {
 
 fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), TranspilerError> {
     match statement {
+        Statement::For { iterable, value, index, then } => {
+            js.push_str("__lagoon_for_in(");
+            transpile_expression(js, iterable)?;
+            js.push_str(", (");
+            js.push_str(&value);
+
+            if index.is_some() {
+                js.push_str(", ");
+                js.push_str(&index.unwrap());
+            }
+
+            js.push_str(") =>");
+            transpile_block(js, then)?;
+            js.push_str(")");
+        },
         Statement::LetDeclaration { name, initial } => {
             js.push_str("let ");
             js.push_str(&name);

@@ -18,3 +18,6 @@ function __lagoon_in(left, right) {
         return right.includes(left)
     }
 }
+function __lagoon_for_in(target, callback) {
+    target.forEach(callback)
+}
