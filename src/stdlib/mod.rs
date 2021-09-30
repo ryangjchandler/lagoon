@@ -38,17 +38,5 @@ pub fn r#type(_: &mut Interpreter, args: Vec<Value>) -> Value {
 
     let arg = args.first().unwrap();
 
-    Value::String(match arg {
-        Value::String(..) => "string".into(),
-        Value::Number(..) => "number".into(),
-        Value::Bool(..) => "bool".into(),
-        Value::Null => "null".into(),
-        Value::Function { .. } | Value::NativeFunction { .. } => "function".into(),
-        Value::StructInstance { definition, .. } => match *definition.clone() {
-            Value::Struct { name, .. } => name,
-            _ => unreachable!()
-        },
-        Value::Struct { .. } => "struct".into(),
-        _ => unreachable!()
-    })
+    Value::String(arg.clone().typestring())
 }

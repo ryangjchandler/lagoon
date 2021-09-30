@@ -184,4 +184,20 @@ impl Value {
             _ => false,
         }
     }
+
+    pub fn typestring(self) -> String {
+        match self {
+            Value::String(..) => "string".into(),
+            Value::Number(..) => "number".into(),
+            Value::Bool(..) => "bool".into(),
+            Value::Null => "null".into(),
+            Value::Function { .. } | Value::NativeFunction { .. } => "function".into(),
+            Value::StructInstance { definition, .. } => match *definition.clone() {
+                Value::Struct { name, .. } => name,
+                _ => unreachable!()
+            },
+            Value::Struct { .. } => "struct".into(),
+            _ => unreachable!()
+        }
+    }
 }

@@ -28,6 +28,24 @@ pub enum InterpreterResult {
 
     #[error("Undefined index: {0}.")]
     UndefinedIndex(usize),
+
+    #[error("Undefined field: {0}.{1}")]
+    UndefinedField(String, String),
+
+    #[error("Undefined method: {0}.{1}()")]
+    UndefinedMethod(String, String),
+
+    #[error("Unable to iterate over value of type {0}.")]
+    InvalidIterable(String),
+
+    #[error("Too few arguments to function {0}(), {1} passed in, {2} expected.")]
+    TooFewArguments(String, usize, usize),
+
+    #[error("Cannot append to value of type {0}.")]
+    InvalidAppendTarget(String),
+
+    #[error("Cannot assign method to static property of type {0}.")]
+    InvalidMethodAssignmentTarget(String),
 }
 
 impl InterpreterResult {
@@ -76,9 +94,11 @@ impl<'i> Interpreter<'i> {
                 });
             },
             Statement::For { iterable, value, index, then } => {
-                let items = match self.run_expression(iterable)? {
+                let iterable = self.run_expression(iterable)?;
+
+                let items = match iterable {
                     Value::List(items) => items,
-                    _ => panic!("You can only iterate over a list."),
+                    _ => return Err(InterpreterResult::InvalidIterable(iterable.typestring())),
                 };
 
                 // If there aren't any items in the list, we can leave this execution
@@ -140,7 +160,7 @@ impl<'i> Interpreter<'i> {
             },
             Value::Function { name, params, body, environment, context } => {
                 if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
-                    panic!("Function {} expects {} arguments, only received {}", name, params.len(), arguments.len());
+                    return Err(InterpreterResult::TooFewArguments(name.clone(), arguments.len(), params.len()));
                 }
 
                 let old_environment = Rc::clone(&self.environment);
@@ -215,18 +235,23 @@ impl<'i> Interpreter<'i> {
                 let instance = self.run_expression(*target.clone())?;
 
                 match instance {
-                    Value::StructInstance { environment, .. } => if let Some(value) = environment.borrow().get(field.clone()) {
+                    Value::StructInstance { environment, definition, .. } => if let Some(value) = environment.borrow().get(field.clone()) {
                         match value {
                             Value::Function { name, params, body, environment, .. } => Value::Function { name, params, body, environment, context: Some(*target) },
                             _ => value,
                         }
                     } else {
-                        panic!("Undefined field / method: {}", field)
+                        let name = match *definition {
+                            Value::Struct { name, .. } => name,
+                            _ => unreachable!()
+                        };
+
+                        return Err(InterpreterResult::UndefinedField(name, field))
                     },
-                    Value::Struct { methods, .. } => if let Some(value) = methods.borrow().get(&field.clone()) {
+                    Value::Struct { name, methods, .. } => if let Some(value) = methods.borrow().get(&field.clone()) {
                         value.clone()
                     } else {
-                        panic!("Undefined static method: {}", field)
+                        return Err(InterpreterResult::UndefinedMethod(name, field))
                     },
                     Value::String(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::StringObject::get(field), context: *target },
                     Value::Number(..) => Value::NativeMethod { name: field.clone(), callback: crate::stdlib::NumberObject::get(field), context: *target },
@@ -330,7 +355,7 @@ impl<'i> Interpreter<'i> {
 
                 for (field, value) in fields {
                     if ! field_definitions.contains(&Parameter { name: field.clone() }) {
-                        panic!("The definition of structure {} does not contain a field named {}.", name, field.clone());
+                        return Err(InterpreterResult::UndefinedField(name, field.clone()));
                     }
 
                     let value = self.run_expression(value)?;
@@ -391,7 +416,9 @@ impl<'i> Interpreter<'i> {
 
                 match *target.clone() {
                     Expression::Index(instance, index) => {
-                        match self.run_expression(*instance)? {
+                        let instance = self.run_expression(*instance)?;
+
+                        match instance {
                             Value::List(items) => {
                                 match index {
                                     Some(i) => {
@@ -403,11 +430,13 @@ impl<'i> Interpreter<'i> {
                                     }
                                 }
                             },
-                            _ => panic!("You can only assign and append items to lists.")
+                            _ => return Err(InterpreterResult::InvalidAppendTarget(instance.typestring()))
                         };
                     },
                     Expression::Get(instance, field) => {
-                        match self.run_expression(*instance)? {
+                        let instance = self.run_expression(*instance)?;
+
+                        match instance.clone() {
                             // TODO: Check if the field exists on the definition before
                             // actually doing the assignment.
                             Value::StructInstance { environment, .. } => {
@@ -415,12 +444,12 @@ impl<'i> Interpreter<'i> {
                             },
                             Value::Struct { methods, .. } => {
                                 if ! matches!(value.clone(), Value::Function { .. }) {
-                                    panic!("Can only assign methods to static properties on a structure.")
+                                    return Err(InterpreterResult::InvalidMethodAssignmentTarget(instance.typestring()))
                                 } else {
                                     methods.borrow_mut().insert(field, value.clone());
                                 }
                             },
-                            _ => todo!()
+                            _ => return Err(InterpreterResult::InvalidMethodAssignmentTarget(instance.typestring()))
                         };
                     },
                     Expression::Identifier(i) => {
