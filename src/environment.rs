@@ -1,14 +1,15 @@
 use hashbrown::HashMap;
-use std::fmt::{Debug, Formatter, Result};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::iter::Iterator;
 
 use crate::interpreter::Interpreter;
 use crate::ast::{Block, Parameter, Expression};
+use crate::interpreter::InterpreterResult;
 
 pub type NativeFunctionCallback = fn (&mut Interpreter, Vec<Value>) -> Value;
-pub type NativeMethodCallback = fn (&mut Interpreter, Value, Vec<Value>) -> Value;
+pub type NativeMethodCallback = fn (&mut Interpreter, Value, Vec<Value>) -> Result<Value, InterpreterResult>;
 
 #[derive(Debug, Clone)]
 pub struct Environment {
@@ -78,7 +79,7 @@ pub enum Value {
 }
 
 impl Debug for Value {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", match self {
             Value::Number(n) => n.to_string(),
             Value::String(s) => s.to_string(),

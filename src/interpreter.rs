@@ -2,6 +2,7 @@ use std::slice::Iter;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
+use thiserror::Error;
 
 use crate::ast::*;
 use crate::environment::*;
@@ -16,8 +17,13 @@ pub fn interpret(ast: Program) {
     interpreter.run();
 }
 
-enum InterpreterResult {
+#[derive(Error, Debug)]
+pub enum InterpreterResult {
+    #[error("")]
     Return(Value),
+
+    #[error("Undefined variable {0}.")]
+    UndefinedVariable(String),
 }
 
 #[derive(Debug, Clone)]
@@ -43,7 +49,7 @@ impl<'i> Interpreter<'i> {
                     self.env_mut().set(name, Value::Null)
                 } else {
                     let initial = initial.unwrap();
-                    let value = self.run_expression(initial);
+                    let value = self.run_expression(initial)?;
 
                     self.env_mut().set(name, value)
                 }
@@ -59,7 +65,7 @@ impl<'i> Interpreter<'i> {
                 });
             },
             Statement::For { iterable, value, index, then } => {
-                let items = match self.run_expression(iterable) {
+                let items = match self.run_expression(iterable)? {
                     Value::List(items) => items,
                     _ => panic!("You can only iterate over a list."),
                 };
@@ -91,7 +97,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Statement::If { condition, then, otherwise } => {
-                let condition = self.run_expression(condition);
+                let condition = self.run_expression(condition)?;
 
                 if condition.to_bool() {
                     for statement in then {
@@ -107,19 +113,19 @@ impl<'i> Interpreter<'i> {
                 self.run_expression(expression);
             },
             Statement::Return { value } => {
-                return Err(InterpreterResult::Return(self.run_expression(value)));
+                return Err(InterpreterResult::Return(self.run_expression(value)?));
             },
             _ => todo!("{:?}", statement),
         })
     }
 
-    pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Value {
-        match callable {
-            Value::NativeFunction { callback, .. } => return callback(self, arguments),
+    pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
+        Ok(match callable {
+            Value::NativeFunction { callback, .. } => callback(self, arguments),
             Value::NativeMethod { callback, context, .. } => {
-                let context = self.run_expression(context);
+                let context = self.run_expression(context)?;
 
-                return callback(self, context, arguments);
+                callback(self, context, arguments)?
             },
             Value::Function { name, params, body, environment, context } => {
                 if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
@@ -134,7 +140,7 @@ impl<'i> Interpreter<'i> {
                 };
 
                 if context.is_some() && params.first() == Some(&Parameter { name: "self".to_string() }) {
-                    let context = self.run_expression(context.unwrap());
+                    let context = self.run_expression(context.unwrap())?;
                     new_environment.borrow_mut().set("self", context);
                 }
 
@@ -161,11 +167,11 @@ impl<'i> Interpreter<'i> {
                 if return_value.is_some() { return_value.unwrap() } else { Value::Null }
             },
             _ => todo!(),
-        }
+        })
     }
 
-    fn run_expression(&mut self, expression: Expression) -> Value {
-        match expression {
+    fn run_expression(&mut self, expression: Expression) -> Result<Value, InterpreterResult> {
+        Ok(match expression {
             Expression::Number(n) => Value::Number(n),
             Expression::String(s) => Value::String(s),
             Expression::Bool(b) => Value::Bool(b),
@@ -181,8 +187,8 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Index(target, index) => {
-                let instance = self.run_expression(*target);
-                let index = self.run_expression(*index.expect("Expected index.")).to_number() as usize;
+                let instance = self.run_expression(*target)?;
+                let index = self.run_expression(*index.expect("Expected index."))?.to_number() as usize;
 
                 match instance {
                     Value::List(items) => {
@@ -195,7 +201,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Get(target, field) => {
-                let instance = self.run_expression(*target.clone());
+                let instance = self.run_expression(*target.clone())?;
 
                 match instance {
                     Value::StructInstance { environment, .. } => if let Some(value) = environment.borrow().get(field.clone()) {
@@ -218,8 +224,8 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Infix(left, op, right) => {
-                let left = self.run_expression(*left);
-                let right = self.run_expression(*right);
+                let left = self.run_expression(*left)?;
+                let right = self.run_expression(*right)?;
 
                 match (left, op, right) {
                     (Value::Number(l), Op::Add, Value::Number(r)) => Value::Number(l + r),
@@ -284,9 +290,13 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::List(items) => {
-                let items = items.into_iter().map(|i| self.run_expression(i)).collect::<Vec<Value>>();
+                let mut values: Vec<Value> = Vec::new();
 
-                Value::List(Rc::new(RefCell::new(items)))
+                for item in items.into_iter() {
+                    values.push(self.run_expression(item)?);
+                }
+
+                Value::List(Rc::new(RefCell::new(values)))
             },
             Expression::Closure(params, body) => {
                 Value::Function {
@@ -298,7 +308,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Struct(definition, fields) => {
-                let definition = self.run_expression(*definition);
+                let definition = self.run_expression(*definition)?;
 
                 let (name, field_definitions, methods) = match definition.clone() {
                     Value::Struct { name, fields, methods } => (name, fields, methods),
@@ -312,7 +322,7 @@ impl<'i> Interpreter<'i> {
                         panic!("The definition of structure {} does not contain a field named {}.", name, field.clone());
                     }
 
-                    let value = self.run_expression(value);
+                    let value = self.run_expression(value)?;
 
                     environment.set(field, match value {
                         Value::StructInstance { environment, definition } => {
@@ -347,13 +357,17 @@ impl<'i> Interpreter<'i> {
                 Value::StructInstance { environment, definition: Box::new(definition) }
             },
             Expression::Call(callable, arguments) => {
-                let callable = self.run_expression(*callable);
-                let arguments: Vec<Value> = arguments.into_iter().map(|a| self.run_expression(a)).collect();
+                let callable = self.run_expression(*callable)?;
+                let mut argument_values: Vec<Value> = Vec::new();
 
-                self.call(callable, arguments)
+                for argument in arguments.into_iter() {
+                    argument_values.push(self.run_expression(argument)?);
+                }
+
+                self.call(callable, argument_values)?
             },
             Expression::Prefix(op, right) => {
-                let right = self.run_expression(*right);
+                let right = self.run_expression(*right)?;
 
                 match op {
                     Op::Bang => Value::Bool(! right.to_bool()),
@@ -362,15 +376,15 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::Assign(target, value) => {
-                let value = self.run_expression(*value);
+                let value = self.run_expression(*value)?;
 
                 match *target.clone() {
                     Expression::Index(instance, index) => {
-                        match self.run_expression(*instance) {
+                        match self.run_expression(*instance)? {
                             Value::List(items) => {
                                 match index {
                                     Some(i) => {
-                                        let index = self.run_expression(*i).to_number();
+                                        let index = self.run_expression(*i)?.to_number();
                                         items.borrow_mut()[index as usize] = value.clone();
                                     },
                                     None => {
@@ -382,7 +396,7 @@ impl<'i> Interpreter<'i> {
                         };
                     },
                     Expression::Get(instance, field) => {
-                        match self.run_expression(*instance) {
+                        match self.run_expression(*instance)? {
                             // TODO: Check if the field exists on the definition before
                             // actually doing the assignment.
                             Value::StructInstance { environment, .. } => {
@@ -407,7 +421,7 @@ impl<'i> Interpreter<'i> {
                 value
             },
             _ => todo!("{:?}", expression),
-        }
+        })
     }
 
     fn define_global_function(&mut self, name: impl Into<String>, callback: NativeFunctionCallback) {
