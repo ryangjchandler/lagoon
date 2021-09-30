@@ -1,13 +1,8 @@
-use std::env::args;
 use std::fs::read_to_string;
 use clap::{Arg, App};
 
-mod token;
-mod parser;
-mod ast;
-mod interpreter;
-mod environment;
-mod stdlib;
+use lagoon_parser::{generate, parse};
+use lagoon_interpreter::{interpret};
 
 const VERSION: &str = "0.1-beta";
 
@@ -31,20 +26,16 @@ fn main() {
     if let Some(ref run) = matches.subcommand_matches("run") {
         let file = run.value_of("file").unwrap();
         let contents = read_to_string(file).unwrap();
-
-        let tokens = token::generate(contents.as_str());
-        match parser::parse(tokens) {
+        let tokens = generate(contents.as_str());
+        
+        match parse(tokens) {
             Ok(ast) => {
-                match interpreter::interpret(ast) {
+                match interpret(ast) {
                     Ok(_) => {},
-                    Err(e) => {
-                        e.print();
-                    }
+                    Err(e) => e.print(),
                 };
             },
-            Err(e) => {
-                e.print();
-            },
+            Err(e) => e.print(),
         };
     }
 }

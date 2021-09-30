@@ -1,0 +1,11 @@
+[package]
+name = "lagoon_parser"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+logos = "0.12"
+thiserror = "1.0"
+hashbrown = "0.11.2"
+clap = "3.0.0-beta.4"
+colored = "2"
