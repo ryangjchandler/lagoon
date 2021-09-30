@@ -34,7 +34,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] Standard Library
 * [ ] Nicer error reporting
 * [ ] Transpile to JavaScript (self-hosted)
-* [ ] Nicer command-line interface
+* [x] Nicer command-line interface
 
 ## Contributing
 
