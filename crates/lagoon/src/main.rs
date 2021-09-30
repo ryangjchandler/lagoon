@@ -1,13 +1,8 @@
-use std::env::args;
 use std::fs::read_to_string;
 use clap::{Arg, App};
 
-mod token;
-mod parser;
-mod ast;
-mod interpreter;
-mod environment;
-mod stdlib;
+use lagoon_parser::{parser, token};
+use lagoon_interpreter::interpreter;
 
 const VERSION: &str = "0.1-beta";
 

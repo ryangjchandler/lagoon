@@ -3,9 +3,9 @@ use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::iter::Iterator;
+use lagoon_parser::ast::{Block, Parameter, Expression};
 
 use crate::interpreter::Interpreter;
-use crate::ast::{Block, Parameter, Expression};
 use crate::interpreter::InterpreterResult;
 
 pub type NativeFunctionCallback = fn (&mut Interpreter, Vec<Value>) -> Value;

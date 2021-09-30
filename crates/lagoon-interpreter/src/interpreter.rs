@@ -4,8 +4,8 @@ use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
 use thiserror::Error;
 use colored::*;
+use lagoon_parser::ast::*;
 
-use crate::ast::*;
 use crate::environment::*;
 
 pub fn interpret(ast: Program) -> Result<(), InterpreterResult> {
