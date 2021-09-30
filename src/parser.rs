@@ -1,6 +1,7 @@
 use std::slice::Iter;
 use thiserror::Error;
 use hashbrown::HashMap;
+use colored::*;
 
 use crate::token::Token;
 use crate::ast::*;
@@ -139,7 +140,7 @@ impl<'p> Parser<'p> {
             Token::Fn => {
                 let (params, body) = match self.parse_fn(false)? {
                     Statement::FunctionDeclaration { params, body, .. } => (params, body),
-                    _ => unreachable!()
+                    _ => return Err(ParseError::Unreachable)
                 };
                 
                 Expression::Closure(params, body)
@@ -166,7 +167,7 @@ impl<'p> Parser<'p> {
 
                 Expression::List(items)
             },
-            _ => todo!("{:?}", self.current.clone())
+            _ => return Err(ParseError::UnexpectedToken(self.current.clone())),
         };
 
         while !self.current_is(Token::Eof) && precedence < Precedence::token(self.current.clone()) {
@@ -423,6 +424,14 @@ impl<'p> Parser<'p> {
 pub enum ParseError {
     #[error("Unexpected token {0:?}.")]
     UnexpectedToken(Token),
+    #[error("Entered unreachable code.")]
+    Unreachable,
+}
+
+impl ParseError {
+    pub fn print(self) {
+        eprintln!("{}", format!("{}", self).red().bold());
+    }
 }
 
 #[cfg(test)]
