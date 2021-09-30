@@ -4,7 +4,7 @@ use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
 use thiserror::Error;
 use colored::*;
-use lagoon_parser::ast::*;
+use lagoon_parser::*;
 
 use crate::environment::*;
 

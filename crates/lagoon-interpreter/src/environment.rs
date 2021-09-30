@@ -3,7 +3,7 @@ use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::iter::Iterator;
-use lagoon_parser::ast::{Block, Parameter, Expression};
+use lagoon_parser::{Block, Parameter, Expression};
 
 use crate::interpreter::Interpreter;
 use crate::interpreter::InterpreterResult;

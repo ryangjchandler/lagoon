@@ -1,3 +1,5 @@
-pub mod interpreter;
-pub mod environment;
-pub mod stdlib;
+mod interpreter;
+mod environment;
+mod stdlib;
+
+pub use interpreter::{InterpreterResult, Interpreter, interpret};
