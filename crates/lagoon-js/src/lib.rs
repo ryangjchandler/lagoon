@@ -222,6 +222,17 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
             js.push_str(".");
             js.push_str(&field);
         },
+        Expression::Index(target, index) => {
+            transpile_expression(js, *target.clone())?;
+            js.push_str("[");
+            if index.is_none() {
+                transpile_expression(js, *target)?;
+                js.push_str(".length");
+            } else {
+                transpile_expression(js, *index.unwrap())?;
+            }
+            js.push_str("]");
+        },
         _ => return Err(TranspilerError::NotImplementedExpression(expression))
     };
 

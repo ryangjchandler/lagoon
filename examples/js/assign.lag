@@ -5,3 +5,11 @@ println(name)
 name = "Ryan"
 
 println(name)
+
+let names = ["Ryan"]
+
+println(names)
+
+names[] = "Jane"
+
+println(names)
