@@ -159,7 +159,7 @@ impl<'i> Interpreter<'i> {
                 callback(self, context, arguments)?
             },
             Value::Function { name, params, body, environment, context } => {
-                if params.first() != Some(&Parameter { name: "self".to_string() }) && params.len() != arguments.len() {
+                if params.first() != Some(&Parameter { name: "this".to_string() }) && params.len() != arguments.len() {
                     return Err(InterpreterResult::TooFewArguments(name.clone(), arguments.len(), params.len()));
                 }
 
@@ -170,12 +170,12 @@ impl<'i> Interpreter<'i> {
                     Rc::new(RefCell::new(Environment::new()))
                 };
 
-                if context.is_some() && params.first() == Some(&Parameter { name: "self".to_string() }) {
+                if context.is_some() && params.first() == Some(&Parameter { name: "this".to_string() }) {
                     let context = self.run_expression(context.unwrap())?;
-                    new_environment.borrow_mut().set("self", context);
+                    new_environment.borrow_mut().set("this", context);
                 }
 
-                for (Parameter { name, .. }, value) in params.into_iter().filter(|p| p.name != "self").zip(arguments) {
+                for (Parameter { name, .. }, value) in params.into_iter().filter(|p| p.name != "this").zip(arguments) {
                     new_environment.borrow_mut().set(name, value);
                 };
 

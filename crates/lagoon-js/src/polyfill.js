@@ -21,3 +21,10 @@ function __lagoon_in(left, right) {
 function __lagoon_for_in(target, callback) {
     target.forEach(callback)
 }
+function __lagoon_register_method(target, name, callback, instance = false) {
+    if (instance) {
+        target.prototype[name] = callback
+    } else {
+        target[name] = callback
+    }
+}

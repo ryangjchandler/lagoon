@@ -228,9 +228,49 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
             transpile_block(js, body)?;
         },
         Expression::Assign(target, value) => {
-            transpile_expression(js, *target)?;
-            js.push_str(op_to_string(Op::Assign)?);
-            transpile_expression(js, *value)?;
+            match *target {
+                Expression::Get(target, field) if matches!(*value, Expression::Closure(..)) => {
+                    js.push_str("__lagoon_register_method(");
+                    
+                    transpile_expression(js, *target)?;
+                    js.push_str(", ");
+                    
+                    transpile_expression(js, Expression::String(field))?;
+                    js.push_str(", ");
+                    
+                    let instance = match *value {
+                        Expression::Closure(ref params, ..) => !params.is_empty() && params.first().unwrap().name == "this",
+                        _ => false,
+                    };
+
+                    match *value {
+                        Expression::Closure(p, body) => {
+                            let mut p = p;
+                            if instance {
+                                p.remove(0);
+                            }
+                            
+                            js.push_str("function (");
+                            js.push_str(&p.into_iter().map(|p| p.name).collect::<Vec<String>>().join(", "));
+                            js.push_str(")");
+
+                            transpile_block(js, body)?;
+                        },
+                        _ => unreachable!()
+                    };
+
+                    js.push_str(", ");
+
+                    transpile_expression(js, Expression::Bool(instance))?;
+
+                    js.push_str(")");
+                },
+                _ => {
+                    transpile_expression(js, *target)?;
+                    js.push_str(op_to_string(Op::Assign)?);
+                    transpile_expression(js, *value)?;
+                }
+            };
         },
         Expression::Get(instance, field) => {
             transpile_expression(js, *instance)?;
