@@ -29,7 +29,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] Lists
 * [x] `for..in` statements
 * [x] `in`, `not in` operators
-* [ ] Scalar objects (methods on scalar types)
+* [x] Scalar objects (methods on scalar types)
 * [ ] Module system
 * [x] Standard Library
 * [ ] Nicer error reporting
