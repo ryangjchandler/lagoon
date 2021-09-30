@@ -35,7 +35,12 @@ fn main() {
         let tokens = token::generate(contents.as_str());
         match parser::parse(tokens) {
             Ok(ast) => {
-                interpreter::interpret(ast);
+                match interpreter::interpret(ast) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        e.print();
+                    }
+                };
             },
             Err(e) => {
                 e.print();

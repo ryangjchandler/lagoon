@@ -3,18 +3,19 @@ use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use hashbrown::HashMap;
 use thiserror::Error;
+use colored::*;
 
 use crate::ast::*;
 use crate::environment::*;
 
-pub fn interpret(ast: Program) {
+pub fn interpret(ast: Program) -> Result<(), InterpreterResult> {
     let mut interpreter = Interpreter::new(ast.iter());
 
     interpreter.define_global_function("println", crate::stdlib::println);
     interpreter.define_global_function("print", crate::stdlib::print);
     interpreter.define_global_function("type", crate::stdlib::r#type);
 
-    interpreter.run();
+    interpreter.run()
 }
 
 #[derive(Error, Debug)]
@@ -22,8 +23,18 @@ pub enum InterpreterResult {
     #[error("")]
     Return(Value),
 
-    #[error("Undefined variable {0}.")]
+    #[error("Undefined variable: {0}.")]
     UndefinedVariable(String),
+
+    #[error("Undefined index: {0}.")]
+    UndefinedIndex(String),
+}
+
+impl InterpreterResult {
+    pub fn print(self) {
+        eprintln!("{}", format!("{}", self).red().bold());
+        std::process::exit(1);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -110,7 +121,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Statement::Expression { expression } => {
-                self.run_expression(expression);
+                self.run_expression(expression)?;
             },
             Statement::Return { value } => {
                 return Err(InterpreterResult::Return(self.run_expression(value)?));
@@ -182,7 +193,7 @@ impl<'i> Interpreter<'i> {
                     if let Some(v) = self.env().get(n.clone()) {
                         v
                     } else {
-                        panic!("Undefined variable: {}", n);
+                        return Err(InterpreterResult::UndefinedVariable(n));
                     }
                 }
             },
@@ -194,7 +205,7 @@ impl<'i> Interpreter<'i> {
                     Value::List(items) => {
                         match items.borrow().get(index) {
                             Some(v) => v.clone(),
-                            None => panic!("Undefined index: {}", index)
+                            None => return Err(InterpreterResult::UndefinedIndex(format!("{}", index)))
                         }
                     },
                     _ => unreachable!()
@@ -441,14 +452,16 @@ impl<'i> Interpreter<'i> {
         RefCell::borrow_mut(&self.environment)
     }
 
-    fn run(&mut self) {
+    fn run(&mut self) -> Result<(), InterpreterResult> {
         while let Some(statement) = self.ast.next() {
-            let _r = self.run_statement(statement.clone());
+            let _r = self.run_statement(statement.clone())?;
         }
 
         if ! ::std::env::args().filter(|a| a == "--debug").collect::<Vec<String>>().is_empty() {
             self.env().dump();
             dbg!(self.globals.clone());
         }
+
+        Ok(())
     }
 }
