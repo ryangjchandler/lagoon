@@ -28,6 +28,7 @@ function __lagoon_register_method(target, name, callback, instance = false) {
         target[name] = callback
     }
 }
+/** MONKEY PATCHING ARRAY IS BAD BUT IT MATCHES OUR BEHAVIOUR, SO WHO CARES? */
 Array.prototype.isEmpty = function () {
     return this.length <= 0
 }
