@@ -32,10 +32,11 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] Scalar objects (methods on scalar types)
 * [ ] Module system
 * [x] Standard Library
-* [ ] Nicer error reporting
+* [*] Nicer error reporting
 * [ ] Transpile to JavaScript (self-hosted)
 * [x] Nicer command-line interface
 * [ ] Migrate parser to on-demand token stream
+* [ ] Line/column numbers in errors
 
 ## Contributing
 
