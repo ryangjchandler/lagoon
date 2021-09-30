@@ -1,1 +1,17 @@
 let name = "Testing"
+println(name)
+
+let number = 12345
+println(number)
+
+let bool_true = true
+println(bool_true)
+
+let bool_false = false
+println(false)
+
+let nullable = null
+println(nullable)
+
+let names = ["Ryan", "James", "John"]
+println(names)
