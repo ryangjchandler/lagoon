@@ -167,9 +167,30 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
             js.push(')');
         },
         Expression::Infix(left, op, right) => {
-            transpile_expression(js, *left)?;
-            js.push_str(op_to_string(op)?);
-            transpile_expression(js, *right)?;
+            if is_native_op(&op) {
+                transpile_expression(js, *left)?;
+                js.push_str(op_to_string(op)?);
+                transpile_expression(js, *right)?;
+            } else {
+                match op {
+                    Op::In => {
+                        js.push_str("__lagoon_in(");
+                        transpile_expression(js, *left)?;
+                        js.push_str(", ");
+                        transpile_expression(js, *right)?;
+                        js.push_str(")");
+                    },
+                    Op::NotIn => {
+                        js.push_str("! ");
+                        js.push_str("__lagoon_in(");
+                        transpile_expression(js, *left)?;
+                        js.push_str(", ");
+                        transpile_expression(js, *right)?;
+                        js.push_str(")");
+                    },
+                    _ => unreachable!(),
+                }
+            }
         },
         Expression::Struct(target, fields) => {
             js.push_str("new ");
@@ -194,6 +215,13 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
     };
 
     Ok(())
+}
+
+fn is_native_op(op: &Op) -> bool {
+    match op {
+        Op::In | Op::NotIn => false,
+        _ => true,
+    }
 }
 
 fn op_to_string(op: Op) -> Result<&'static str, TranspilerError> {
