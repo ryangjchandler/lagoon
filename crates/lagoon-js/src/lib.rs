@@ -212,6 +212,11 @@ fn transpile_expression(js: &mut String, expression: Expression) -> Result<(), T
             js.push_str(") => ");
             transpile_block(js, body)?;
         },
+        Expression::Assign(target, value) => {
+            transpile_expression(js, *target)?;
+            js.push_str(op_to_string(Op::Assign)?);
+            transpile_expression(js, *value)?;
+        },
         Expression::Get(instance, field) => {
             transpile_expression(js, *instance)?;
             js.push_str(".");

@@ -1,0 +1,7 @@
+let name
+
+println(name)
+
+name = "Ryan"
+
+println(name)
