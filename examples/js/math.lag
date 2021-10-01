@@ -1,0 +1,10 @@
+let sum = 2 + 3
+let product = 2 * 3
+let subtraction = 3 - 2
+let division = 3 / 2
+let precedence = 2 + 3 * 2 / 2
+
+println(2 ** 2)
+println(2 ** 2 * 3)
+println(2 ** 2 + 2)
+println(2 ** 2 / 3)
