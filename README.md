@@ -37,6 +37,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] Nicer command-line interface
 * [ ] Migrate parser to on-demand token stream
 * [ ] Line/column numbers in errors
+* [ ] Build a virtual machine to replace the interpreter
 
 ## Contributing
 
