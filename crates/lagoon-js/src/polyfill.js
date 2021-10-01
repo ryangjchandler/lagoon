@@ -42,4 +42,28 @@ const __lagoon_og_array_reverse = Array.prototype.reverse
 Array.prototype.reverse = function () {
     return __lagoon_og_array_reverse.call([...this])
 }
+String.prototype.contains = function (needle) {
+    return this.includes(needle)
+}
+String.prototype.finish = function (needle) {
+    if (this.endsWith(needle)) {
+        return this
+    }
+    return this + needle;
+}
+String.prototype.append = function (string) {
+    return this + string
+}
+String.prototype.tap = function (callback) {
+    if (callback !== undefined) {
+        callback(this)
+    }
+    return this
+}
+String.prototype.toUpper = function () {
+    return this.toUpperCase()
+}
+String.prototype.toLower = function () {
+    return this.toLowerCase()
+}
 ;

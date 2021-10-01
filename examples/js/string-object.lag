@@ -1,0 +1,14 @@
+let name = "Ryan"
+
+println(name.contains("Ry"))
+println(name.startsWith("Ry"))
+println(name.endsWith("an"))
+println(name.finish(" Chandler"))
+println(name.append(" Chandler"))
+
+name.tap(fn (raw) {
+    println("Tapped value is: " + raw)
+})
+
+println("this should be in uppercase".toUpper())
+println("this should be in lowercase".toLower())
