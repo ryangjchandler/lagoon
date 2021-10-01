@@ -33,7 +33,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [ ] Module system
 * [x] Standard Library
 * [x] Nicer error reporting
-* [ ] Transpile to JavaScript (self-hosted)
+* [x] Transpile to JavaScript
 * [x] Nicer command-line interface
 * [ ] Migrate parser to on-demand token stream
 * [ ] Line/column numbers in errors
