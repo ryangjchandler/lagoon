@@ -222,6 +222,7 @@ fn compile_expression(code: &mut Vec<Op>, expression: Expression) -> Result<(), 
         Expression::Number(n) => code.push(Op::Push(Value::Number(n))),
         Expression::String(s) => code.push(Op::Push(Value::String(s))),
         Expression::Bool(b) => code.push(Op::Push(Value::Bool(b))),
+        Expression::Null => code.push(Op::Push(Value::Null)),
         Expression::Call(callable, arguments) => {
             // Push all of the arguments to the stack and keep
             // track of how many arguments were pushed.
