@@ -220,6 +220,8 @@ fn compile(code: &mut Vec<Op>, statement: Statement) -> Result<(), MachineResult
 fn compile_expression(code: &mut Vec<Op>, expression: Expression) -> Result<(), MachineResult> {
     match expression {
         Expression::Number(n) => code.push(Op::Push(Value::Number(n))),
+        Expression::String(s) => code.push(Op::Push(Value::String(s))),
+        Expression::Bool(b) => code.push(Op::Push(Value::Bool(b))),
         Expression::Call(callable, arguments) => {
             // Push all of the arguments to the stack and keep
             // track of how many arguments were pushed.
