@@ -8,6 +8,20 @@ Lagoon is a dynamic, weakly-typed and minimal scripting language. It draws inspi
 
 If you want to learn more about the language itself, you can read the [SPECIFICATION](./SPECIFICATION.md) or take a look at the collection of [examples](./examples) in this repository.
 
+## Example
+
+```rust
+fn fib(n) {
+    if n < 2 {
+        return n
+    }
+
+    return fib(n - 1) + fib(n - 2)
+}
+
+println(fib(10))
+```
+
 ## Theory
 
 Lagoon parses a string of source code into a token stream and [abstract syntax tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
