@@ -66,4 +66,10 @@ String.prototype.toUpper = function () {
 String.prototype.toLower = function () {
     return this.toLowerCase()
 }
+Number.prototype.isInteger = function () {
+    return Number.isInteger(this.valueOf())
+}
+Number.prototype.isFloat = function () {
+    return ! this.isInteger()
+}
 ;
