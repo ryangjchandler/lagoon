@@ -169,7 +169,7 @@ impl Value {
             Value::Number(n) => n.to_string(),
             Value::Bool(_) => self.to_number().to_string(),
             Value::Null => "".to_string(),
-            v @ Value::Function { .. } | v @ Value::StructInstance { .. } | v @ Value::List(..) => format!("{:?}", v),
+            v @ Value::Function { .. } | v @ Value::StructInstance { .. } | v @ Value::List(..) | v @ Value::Struct { .. } => format!("{:?}", v),
             Value::Constant(v) => v.to_string(),
             _ => todo!(),
         }

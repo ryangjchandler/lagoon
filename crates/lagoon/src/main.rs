@@ -48,6 +48,7 @@ fn main() {
         
         match parse(tokens) {
             Ok(ast) => {
+                dbg!(ast.clone());
                 match interpret(ast) {
                     Ok(_) => {},
                     Err(e) => e.print(),

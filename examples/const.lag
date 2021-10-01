@@ -1,8 +1,17 @@
+struct Person {
+    name
+}
+
+const Ryan = Person { name: "Ryan" }
+
+println(Ryan.name)
+
+Ryan.name = "testing"
+
+println(Ryan.name)
+
 const name = "Ryan"
 
 println(name)
 
-name = "John"
-
--- Never reached because `name` is constant.
-println(name)
+name = "john"
