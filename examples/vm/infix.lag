@@ -1,0 +1,14 @@
+println("The following should equal 3.")
+println(1 + 2)
+
+println("The following should equal 8.")
+println(4 * 2)
+
+println("The following should equal 3.")
+println(6 / 2)
+
+println("The following should equal 1.")
+println(2 - 1)
+
+println("The following should equal 10.")
+println(2 + 2 * 2 + 8 / 2)

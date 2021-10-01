@@ -1,7 +1,7 @@
 mod value;
 mod op;
 
-use lagoon_parser::{Statement, Expression, Program};
+use lagoon_parser::{Statement, Expression, Program, Op as InfixOp};
 use thiserror::Error;
 use colored::*;
 use std::path::PathBuf;
@@ -117,6 +117,18 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
     for code in codes {
         match code {
             Op::Push(v) => frames.last_mut().unwrap().push(v),
+            Op::Infix(op) => {
+                let left = frames.last_mut().unwrap().pop().unwrap();
+                let right = frames.last_mut().unwrap().pop().unwrap();
+
+                frames.last_mut().unwrap().push(match (left.clone(), op.clone(), right.clone()) {
+                    (Value::Number(l), InfixOp::Add, Value::Number(r)) => Value::Number(l + r),
+                    (Value::Number(l), InfixOp::Subtract, Value::Number(r)) => Value::Number(l - r),
+                    (Value::Number(l), InfixOp::Multiply, Value::Number(r)) => Value::Number(l * r),
+                    (Value::Number(l), InfixOp::Divide, Value::Number(r)) => Value::Number(l / r),
+                    _ => todo!("{:?} {:?} {:?}", left, op, right),
+                })
+            },
             Op::Set(name) => {
                 let value = frames.last_mut().unwrap().pop().unwrap();
                 frames.last_mut().unwrap().env_mut().set(name, value);
@@ -223,6 +235,16 @@ fn compile_expression(code: &mut Vec<Op>, expression: Expression) -> Result<(), 
         Expression::String(s) => code.push(Op::Push(Value::String(s))),
         Expression::Bool(b) => code.push(Op::Push(Value::Bool(b))),
         Expression::Null => code.push(Op::Push(Value::Null)),
+        Expression::Infix(left, op, right) => {
+            // Compile the right-hand side first.
+            compile_expression(code, *right)?;
+
+            // Then compile the left hand side.
+            compile_expression(code, *left)?;
+            
+            // Finally push the operator to the program.
+            code.push(Op::Infix(op));
+        },
         Expression::Call(callable, arguments) => {
             // Push all of the arguments to the stack and keep
             // track of how many arguments were pushed.

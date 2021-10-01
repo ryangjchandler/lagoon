@@ -1,4 +1,5 @@
 use crate::Value;
+use lagoon_parser::Op as InfixOp;
 
 #[derive(Debug, Clone)]
 pub enum Op {
@@ -6,4 +7,5 @@ pub enum Op {
     Set(String),
     Get(String),
     Call(usize),
+    Infix(InfixOp),
 }
