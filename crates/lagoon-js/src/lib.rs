@@ -59,10 +59,8 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
         Statement::LetDeclaration { name, initial } => {
             js.push_str("let ");
             js.push_str(&name);
-            if initial.is_some() {
-                js.push_str(" = ");
-                transpile_expression(js, initial.unwrap())?;
-            }
+            js.push_str(" = ");
+            transpile_expression(js, initial.unwrap_or(Expression::Null))?;
             js.push_str(";");
         },
         Statement::StructDeclaration { name, fields } => {
