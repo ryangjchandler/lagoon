@@ -1,0 +1,14 @@
+-- This is a single-line comment.
+let name = "Testing"
+
+println(name) -- You can place a comment after a statement like this.
+
+let names = [
+    "Ryan", -- This is a comment
+    "Testing"
+]
+
+-- Let's do a loop!
+for name in names {
+    println(name)
+}

@@ -122,6 +122,7 @@ pub enum Token {
     Eof,
 
     #[error]
+    #[regex(r"--[^\n]*", logos::skip)]
     #[regex(r"[ \t\n\f]+", logos::skip)]
     Error,
 }
@@ -139,6 +140,13 @@ impl Into<String> for Token {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn it_can_skip_comments() {
+        let mut lexer = Token::lexer("-- foo");
+
+        assert_eq!(lexer.next(), None);
+    }
 
     #[test]
     fn it_can_recognise_reserved_keywords() {
