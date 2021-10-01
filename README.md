@@ -50,7 +50,7 @@ Lagoon is nowhere near being feature complete or syntax complete. Below is a sma
 * [x] Nicer error reporting
 * [x] Transpile to JavaScript
 * [x] Nicer command-line interface
-* [ ] Constant declarations (`const`)
+* [x] Constant declarations (`const`)
 * [ ] Migrate parser to on-demand token stream
 * [ ] Line/column numbers in errors
 * [ ] Build a virtual machine to replace the interpreter
