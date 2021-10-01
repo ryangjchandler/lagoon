@@ -1,0 +1,5 @@
+struct Math {}
+
+Math.pow = fn (left, right) {
+    return left ** right
+}
