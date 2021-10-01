@@ -24,6 +24,10 @@ pub enum Statement {
         name: Identifier,
         initial: Option<Expression>,
     },
+    ConstDeclaration {
+        name: Identifier,
+        initial: Expression,
+    },
     If {
         condition: Expression,
         then: Block,

@@ -32,6 +32,8 @@ pub enum Token {
     Fn,
     #[token("let")]
     Let,
+    #[token("const")]
+    Const,
     #[token("if")]
     If,
     #[token("else")]

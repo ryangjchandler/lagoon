@@ -46,6 +46,9 @@ pub enum InterpreterResult {
 
     #[error("Cannot assign method to static property of type {0}.")]
     InvalidMethodAssignmentTarget(String),
+
+    #[error("Cannot assign value to constant.")]
+    CannotAssignValueToConstant,
 }
 
 impl InterpreterResult {
@@ -82,6 +85,11 @@ impl<'i> Interpreter<'i> {
 
                     self.env_mut().set(name, value)
                 }
+            },
+            Statement::ConstDeclaration { name, initial } => {
+                let value = Value::Constant(Box::new(self.run_expression(initial)?));
+
+                self.env_mut().set(name, value)
             },
             Statement::FunctionDeclaration { name, params, body } => {
                 self.globals.insert(name.clone(), Value::Function {
@@ -413,6 +421,11 @@ impl<'i> Interpreter<'i> {
             },
             Expression::Assign(target, value) => {
                 let value = self.run_expression(*value)?;
+
+                match self.run_expression(*target.clone())? {
+                    Value::Constant(_) => return Err(InterpreterResult::CannotAssignValueToConstant),
+                    _ => (),
+                };
 
                 match *target.clone() {
                     Expression::Index(instance, index) => {

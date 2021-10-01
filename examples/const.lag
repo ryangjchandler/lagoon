@@ -1,0 +1,8 @@
+const name = "Ryan"
+
+println(name)
+
+name = "John"
+
+-- Never reached because `name` is constant.
+println(name)

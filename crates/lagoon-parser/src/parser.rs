@@ -74,6 +74,7 @@ impl<'p> Parser<'p> {
             Token::Fn => self.parse_fn(true),
             Token::Struct => self.parse_struct(),
             Token::Let => self.parse_let(),
+            Token::Const => self.parse_const(),
             Token::If => self.parse_if(),
             Token::For => self.parse_for(),
             Token::Return => {
@@ -290,6 +291,20 @@ impl<'p> Parser<'p> {
         };
 
         Ok(Statement::If { condition, then, otherwise })
+    }
+
+    fn parse_const(&mut self) -> Result<Statement, ParseError> {
+        self.expect_token_and_read(Token::Const)?;
+
+        let name: Identifier = self.expect_identifier_and_read()?.into();
+        self.expect_token_and_read(Token::Assign)?;
+
+        let initial = self.parse_expression(Precedence::Lowest)?;
+
+        Ok(Statement::ConstDeclaration {
+            name: name,
+            initial: initial,
+        })
     }
 
     fn parse_let(&mut self) -> Result<Statement, ParseError> {
