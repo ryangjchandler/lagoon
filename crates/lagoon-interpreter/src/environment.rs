@@ -202,6 +202,7 @@ impl Value {
                 _ => unreachable!()
             },
             Value::Struct { .. } => "struct".into(),
+            Value::List(..) => "list".into(),
             _ => unreachable!()
         }
     }

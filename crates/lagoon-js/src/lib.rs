@@ -68,7 +68,7 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
         Statement::StructDeclaration { name, fields } => {
             js.push_str("class ");
             js.push_str(&name);
-            js.push_str(" {\n");
+            js.push_str(" extends __lagoon_struct {\n");
             
             for field in fields.clone() {
                 js.push_str(&field.name);
@@ -114,10 +114,17 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
 }
 
 fn struct_constructor(js: &mut String, method: &str, parameters: &[String]) -> Result<(), TranspilerError> {
+    if parameters.is_empty() {
+        return Ok(())
+    }
+    
     js.push_str(method);
-    js.push_str(" ({");
-    js.push_str(&parameters.join(", "));
-    js.push_str("}) {\n");
+    
+    if !parameters.is_empty() {
+        js.push_str(" ({");
+        js.push_str(&parameters.join(", "));
+        js.push_str("}) {\n");
+    }
 
     for parameter in parameters {
         js.push_str("this.");

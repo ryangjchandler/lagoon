@@ -4,7 +4,14 @@ function println(...args) {
     });
 };
 const print = println;
+class __lagoon_struct {
+    static structName() {
+        return (new this).constructor.name
+    }
+}
 function type(value) {
+    if (Array.isArray(value)) return "list";
+    if (value.structName !== undefined) return "struct";
     return {
         "boolean": "bool",
     }[typeof value] || typeof value;
