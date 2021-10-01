@@ -63,6 +63,13 @@ fn transpile_statement(js: &mut String, statement: Statement) -> Result<(), Tran
             transpile_expression(js, initial.unwrap_or(Expression::Null))?;
             js.push_str(";");
         },
+        Statement::ConstDeclaration { name, initial } => {
+            js.push_str("const ");
+            js.push_str(&name);
+            js.push_str(" = ");
+            transpile_expression(js, initial)?;
+            js.push_str(";");
+        },
         Statement::StructDeclaration { name, fields } => {
             js.push_str("class ");
             js.push_str(&name);
