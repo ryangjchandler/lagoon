@@ -1,6 +1,6 @@
 use crate::Value;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Op {
     Push(Value),
     Set(String),

@@ -33,7 +33,7 @@ macro_rules! arity {
 
 fn std_println(arguments: Vec<Value>) -> Value {
     assert!(arguments.len() > 0);
-    
+
     for argument in arguments {
         // TODO: Convert values into their _real_ string equivalents.
         println!("{:?}", argument);
@@ -76,6 +76,7 @@ impl Environment {
 #[derive(Debug, Default)]
 struct CallFrame {
     environment: Rc<RefCell<Environment>>,
+    stack: Vec<Value>,
 }
 
 impl CallFrame {
@@ -86,6 +87,14 @@ impl CallFrame {
     pub fn env(&self) -> Ref<Environment> {
         self.environment.borrow()
     }
+
+    pub fn push(&mut self, value: Value) {
+        self.stack.push(value)
+    }
+
+    pub fn pop(&mut self) -> Option<Value> {
+        self.stack.pop()
+    }
 }
 
 pub fn execute(ast: Program, _: PathBuf) -> Result<(), MachineResult> {
@@ -95,23 +104,29 @@ pub fn execute(ast: Program, _: PathBuf) -> Result<(), MachineResult> {
         compile(&mut codes, statement)?;
     }
 
-    let mut stack: Vec<Value> = Vec::new();
     let mut frames: Vec<CallFrame> = vec![
         CallFrame::default(),
     ];
 
+    run(codes, &mut frames)?;
+
+    Ok(())
+}
+
+fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult> {
     for code in codes {
         match code {
-            Op::Push(v) => stack.push(v),
+            Op::Push(v) => frames.last_mut().unwrap().push(v),
             Op::Set(name) => {
-                let value = stack.pop().unwrap();
+                let value = frames.last_mut().unwrap().pop().unwrap();
                 frames.last_mut().unwrap().env_mut().set(name, value);
             },
             Op::Get(name) => {
-                stack.push(frames.last().unwrap().env().get(&name).expect(&format!("{} is not defined.", name)));
+                let value = frames.last().unwrap().env().get(&name).expect(&format!("{} is not defined.", name));
+                frames.last_mut().unwrap().push(value);
             },
             Op::Call(count) => {
-                let callable = stack.pop().unwrap();
+                let callable = frames.last_mut().unwrap().pop().unwrap();
 
                 match callable {
                     Value::NativeFunction(callback) => {
@@ -119,21 +134,41 @@ pub fn execute(ast: Program, _: PathBuf) -> Result<(), MachineResult> {
 
                         if count > 0 {
                             for _ in 0..count {
-                                arguments.push(stack.pop().unwrap());
+                                arguments.push(frames.last_mut().unwrap().pop().unwrap());
                             }
                         }
 
                         callback(arguments);
+                    },
+                    Value::Function(chunk, arity) => {
+                        let mut args: Vec<Value> = Vec::new();
+
+                        // Use the arity to figure out how many values we need
+                        // to pop from the current stack and push into the call frame.
+                        if arity > 0 {
+                            for i in 0..arity {
+                                args.push(frames.last_mut().unwrap().pop().unwrap());
+                            }
+                        }
+
+                        frames.push(CallFrame::default());
+
+                        for arg in args {
+                            frames.last_mut().unwrap().push(arg);
+                        }
+
+                        run(chunk, frames)?;
+
+                        // Remove the last frame as we've exited the function
+                        // and no longer need it.
+                        frames.pop();
                     },
                     _ => todo!("callable {:?}", callable),
                 }
             },
             _ => todo!("{:?}", code),
         };
-    }
-
-    dbg!(stack);
-    dbg!(frames);
+    };
 
     Ok(())
 }
@@ -148,6 +183,32 @@ fn compile(code: &mut Vec<Op>, statement: Statement) -> Result<(), MachineResult
             }
 
             code.push(Op::Set(name))
+        },
+        Statement::FunctionDeclaration { name, params, body } => {
+            // Create a new chunk of `Op`s for this function.
+            let mut chunk: Vec<Op> = Vec::new();
+
+            // Keeping track of the parameter count.
+            let mut count: usize = 0;
+
+            // Loop through each of the parameters and load their
+            // values into the current frame's environment.
+            for param in params {
+                chunk.push(Op::Set(param.name));
+                count += 1;
+            }
+
+            // Loop through each of the statement in the function
+            // and compile them into the current chunk.
+            for statement in body {
+                compile(&mut chunk, statement)?;
+            }
+
+            // Push the function to the stack.
+            code.push(Op::Push(Value::Function(chunk, count)));
+
+            // Define the function in the current environment.
+            code.push(Op::Set(name));
         },
         Statement::Expression { expression } => compile_expression(code, expression)?,
         _ => todo!("{:?}", statement),

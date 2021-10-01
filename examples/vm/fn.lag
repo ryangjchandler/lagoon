@@ -1,0 +1,5 @@
+fn print(subject) {
+    println(subject)
+}
+
+print(100)
