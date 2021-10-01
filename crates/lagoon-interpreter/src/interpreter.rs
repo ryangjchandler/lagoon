@@ -1,6 +1,8 @@
 use std::slice::Iter;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
+use std::path::PathBuf;
+use std::fs::canonicalize;
 use hashbrown::HashMap;
 use thiserror::Error;
 use colored::*;
@@ -8,12 +10,17 @@ use lagoon_parser::*;
 
 use crate::environment::*;
 
-pub fn interpret(ast: Program) -> Result<(), InterpreterResult> {
-    let mut interpreter = Interpreter::new(ast.iter());
-
+pub fn register_global_functions(interpreter: &mut Interpreter) {
     interpreter.define_global_function("println", crate::stdlib::println);
     interpreter.define_global_function("print", crate::stdlib::print);
     interpreter.define_global_function("type", crate::stdlib::r#type);
+    interpreter.define_global_function("require", crate::stdlib::require);
+}
+
+pub fn interpret(ast: Program, path: PathBuf) -> Result<(), InterpreterResult> {
+    let mut interpreter = Interpreter::new(ast.iter(), canonicalize(path).unwrap());
+
+    register_global_functions(&mut interpreter);
 
     interpreter.run()
 }
@@ -62,15 +69,17 @@ impl InterpreterResult {
 pub struct Interpreter<'i> {
     ast: Iter<'i, Statement>,
     environment: Rc<RefCell<Environment>>,
-    globals: HashMap<String, Value>,
+    pub globals: HashMap<String, Value>,
+    path: PathBuf,
 }
 
 impl<'i> Interpreter<'i> {
-    fn new(ast: Iter<'i, Statement>) -> Self {
+    pub fn new(ast: Iter<'i, Statement>, path: PathBuf) -> Self {
         Self {
             ast: ast,
             environment: Rc::new(RefCell::new(Environment::new())),
             globals: HashMap::new(),
+            path: path,
         }
     }
 
@@ -160,6 +169,7 @@ impl<'i> Interpreter<'i> {
 
     pub fn call(&mut self, callable: Value, arguments: Vec<Value>) -> Result<Value, InterpreterResult> {
         Ok(match callable {
+            Value::Constant(v) => self.call(*v, arguments)?,
             Value::NativeFunction { callback, .. } => callback(self, arguments),
             Value::NativeMethod { callback, context, .. } => {
                 let context = self.run_expression(context)?;
@@ -307,7 +317,7 @@ impl<'i> Interpreter<'i> {
                     (Value::String(l), Op::NotIn, Value::String(r)) => {
                         Value::Bool(! r.contains(l.as_str()))
                     },
-                    _ => todo!()
+                    _ => todo!(),
                 }
             },
             Expression::List(items) => {
@@ -467,6 +477,10 @@ impl<'i> Interpreter<'i> {
         })
     }
 
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+
     fn define_global_function(&mut self, name: impl Into<String>, callback: NativeFunctionCallback) {
         let name = name.into();
 
@@ -512,9 +526,19 @@ impl<'i> Interpreter<'i> {
         })
     }
 
+    pub fn exec(&mut self, ast: Program) -> Result<(), InterpreterResult> {
+        let mut ast = ast.into_iter();
+
+        while let Some(statement) = ast.next() {
+            self.run_statement(statement)?;
+        }
+
+        Ok(())
+    }
+
     fn run(&mut self) -> Result<(), InterpreterResult> {
         while let Some(statement) = self.ast.next() {
-            let _r = self.run_statement(statement.clone())?;
+            self.run_statement(statement.clone())?;
         }
 
         if ! ::std::env::args().filter(|a| a == "--debug").collect::<Vec<String>>().is_empty() {
