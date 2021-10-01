@@ -10,7 +10,8 @@ If you want to learn more about the language itself, you can read the [SPECIFICA
 
 ## Example
 
-```rust
+```
+-- This is a recursive fibonacci function. It accepts a number `n`.
 fn fib(n) {
     if n < 2 {
         return n
@@ -19,7 +20,7 @@ fn fib(n) {
     return fib(n - 1) + fib(n - 2)
 }
 
-println(fib(10))
+println(fib(10)) -- `println` is a function in the standard library.
 ```
 
 ## Theory
