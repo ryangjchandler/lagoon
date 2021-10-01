@@ -13,8 +13,12 @@ pub(crate) use value::Value;
 pub(crate) use op::Op;
 
 #[derive(Error, Debug)]
-pub enum MachineResult {
+pub enum MachineResult {    
+    #[error("")]
+    Return(Value),
 
+    #[error("{0}")]
+    Base(String),
 }
 
 impl MachineResult {
@@ -117,6 +121,7 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
     for code in codes {
         match code {
             Op::Push(v) => frames.last_mut().unwrap().push(v),
+            Op::Return => return Err(MachineResult::Return(frames.last_mut().unwrap().pop().unwrap())),
             Op::Infix(op) => {
                 let left = frames.last_mut().unwrap().pop().unwrap();
                 let right = frames.last_mut().unwrap().pop().unwrap();
@@ -126,6 +131,10 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                     (Value::Number(l), InfixOp::Subtract, Value::Number(r)) => Value::Number(l - r),
                     (Value::Number(l), InfixOp::Multiply, Value::Number(r)) => Value::Number(l * r),
                     (Value::Number(l), InfixOp::Divide, Value::Number(r)) => Value::Number(l / r),
+                    (Value::Number(l), InfixOp::LessThan, Value::Number(r)) => Value::Bool(l < r),
+                    (Value::Number(l), InfixOp::GreaterThan, Value::Number(r)) => Value::Bool(l > r),
+                    (Value::Number(l), InfixOp::LessThanOrEquals, Value::Number(r)) => Value::Bool(l <= r),
+                    (Value::Number(l), InfixOp::GreaterThanOrEquals, Value::Number(r)) => Value::Bool(l >= r),
                     _ => todo!("{:?} {:?} {:?}", left, op, right),
                 })
             },
@@ -145,7 +154,7 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                 } else {
                     run(otherwise, frames)?;
                 }
-            }
+            },
             Op::Call(count) => {
                 let callable = frames.last_mut().unwrap().pop().unwrap();
 
@@ -159,7 +168,9 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                             }
                         }
 
-                        callback(arguments);
+                        let result = callback(arguments);
+
+                        frames.last_mut().unwrap().push(result);
                     },
                     Value::Function(chunk, arity) => {
                         let mut args: Vec<Value> = Vec::new();
@@ -167,7 +178,7 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                         // Use the arity to figure out how many values we need
                         // to pop from the current stack and push into the call frame.
                         if arity > 0 {
-                            for i in 0..arity {
+                            for _ in 0..arity {
                                 args.push(frames.last_mut().unwrap().pop().unwrap());
                             }
                         }
@@ -178,11 +189,18 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                             frames.last_mut().unwrap().push(arg);
                         }
 
-                        run(chunk, frames)?;
+                        let mut result = Value::Null;
+
+                        match run(chunk, frames) {
+                            Err(MachineResult::Return(v)) => result = v,
+                            _ => {}
+                        };
 
                         // Remove the last frame as we've exited the function
                         // and no longer need it.
                         frames.pop();
+
+                        frames.last_mut().unwrap().push(result);
                     },
                     _ => todo!("callable {:?}", callable),
                 }
@@ -196,6 +214,10 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
 
 fn compile(code: &mut Vec<Op>, statement: Statement) -> Result<(), MachineResult> {
     match statement {
+        Statement::Return { value } => {
+            compile_expression(code, value)?;
+            code.push(Op::Return);
+        },
         Statement::LetDeclaration { name, initial } => {
             if initial.is_some() {
                 compile_expression(code, initial.unwrap())?;

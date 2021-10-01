@@ -1,0 +1,5 @@
+fn name() {
+    return "Ryan"
+}
+
+println(name())

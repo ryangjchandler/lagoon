@@ -9,4 +9,5 @@ pub enum Op {
     Call(usize),
     Infix(InfixOp),
     If(Vec<Op>, Vec<Op>),
+    Return,
 }
