@@ -43,13 +43,13 @@ fn main() {
 
     if let Some(ref run) = matches.subcommand_matches("run") {
         let file = run.value_of("file").unwrap();
+        let path = std::path::PathBuf::from(file);
         let contents = read_to_string(file).unwrap();
         let tokens = generate(contents.as_str());
         
         match parse(tokens) {
             Ok(ast) => {
-                dbg!(ast.clone());
-                match interpret(ast) {
+                match interpret(ast, path) {
                     Ok(_) => {},
                     Err(e) => e.print(),
                 };

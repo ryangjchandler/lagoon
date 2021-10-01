@@ -1,6 +1,8 @@
 use std::slice::Iter;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
+use std::path::PathBuf;
+use std::fs::canonicalize;
 use hashbrown::HashMap;
 use thiserror::Error;
 use colored::*;
@@ -8,8 +10,8 @@ use lagoon_parser::*;
 
 use crate::environment::*;
 
-pub fn interpret(ast: Program) -> Result<(), InterpreterResult> {
-    let mut interpreter = Interpreter::new(ast.iter());
+pub fn interpret(ast: Program, path: PathBuf) -> Result<(), InterpreterResult> {
+    let mut interpreter = Interpreter::new(ast.iter(), canonicalize(path).unwrap());
 
     interpreter.define_global_function("println", crate::stdlib::println);
     interpreter.define_global_function("print", crate::stdlib::print);
@@ -63,14 +65,16 @@ pub struct Interpreter<'i> {
     ast: Iter<'i, Statement>,
     environment: Rc<RefCell<Environment>>,
     globals: HashMap<String, Value>,
+    path: PathBuf,
 }
 
 impl<'i> Interpreter<'i> {
-    fn new(ast: Iter<'i, Statement>) -> Self {
+    fn new(ast: Iter<'i, Statement>, path: PathBuf) -> Self {
         Self {
             ast: ast,
             environment: Rc::new(RefCell::new(Environment::new())),
             globals: HashMap::new(),
+            path: path,
         }
     }
 
