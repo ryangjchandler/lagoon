@@ -1,8 +1,10 @@
 use std::fs::read_to_string;
-use clap::{Arg, App};
+use clap::{Arg, App, AppSettings};
 
 use lagoon_parser::{generate, parse};
 use lagoon_interpreter::{interpret};
+
+mod cmd;
 
 const VERSION: &str = "0.1-beta";
 
@@ -11,6 +13,7 @@ fn main() {
         .version(VERSION)
         .author("Ryan Chandler <lagoon@ryangjchandler.co.uk>")
         .about("The official interpreter for Lagoon.")
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(
             App::new("run")
                 .about("Run a Lagoon file.")
@@ -18,6 +21,21 @@ fn main() {
                 .arg(
                     Arg::new("file")
                         .about("The Lagoon file to execute.")
+                        .required(true)
+                )
+        )
+        .subcommand(
+            App::new("js")
+                .about("Transpile a Lagoon script to JavaScript.")
+                .version(VERSION)
+                .arg(
+                    Arg::new("file")
+                        .about("The Lagoon file to transpile.")
+                        .required(true)
+                )
+                .arg(
+                    Arg::new("output")
+                        .about("The target destination for the transpiled file.")
                         .required(true)
                 )
         )
@@ -33,6 +51,21 @@ fn main() {
                 match interpret(ast) {
                     Ok(_) => {},
                     Err(e) => e.print(),
+                };
+            },
+            Err(e) => e.print(),
+        };
+    } else if let Some(ref js) = matches.subcommand_matches("js") {
+        let file = js.value_of("file").unwrap();
+        let contents = read_to_string(file).unwrap();
+        let output = js.value_of("output").unwrap();
+        let tokens = generate(contents.as_str());
+
+        match parse(tokens) {
+            Ok(ast) => {
+                match cmd::js(ast, output) {
+                    Ok(_) => {},
+                    Err(e) => e.print(), 
                 };
             },
             Err(e) => e.print(),

@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::iter::Iterator;
 use lagoon_parser::{Block, Parameter, Expression};
+use bigdecimal::{BigDecimal, FromPrimitive};
 
 use crate::interpreter::Interpreter;
 use crate::interpreter::InterpreterResult;
@@ -139,6 +140,10 @@ impl Value {
         }
     }
 
+    pub fn to_bigdecimal(self) -> BigDecimal {
+        BigDecimal::from_f64(self.to_number()).unwrap()
+    }
+
     pub fn to_number(self) -> f64 {
         match self {
             Value::Number(n) => n,
@@ -197,6 +202,7 @@ impl Value {
                 _ => unreachable!()
             },
             Value::Struct { .. } => "struct".into(),
+            Value::List(..) => "list".into(),
             _ => unreachable!()
         }
     }

@@ -1,0 +1,9 @@
+let names = ["Ryan", "James", "Jane"]
+
+if "Ryan" in names {
+    println("Ryan was found in the array.")
+}
+
+if "Jim" not in names {
+    println("Jim wasn't found in the array.")
+}

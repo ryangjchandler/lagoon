@@ -1,0 +1,9 @@
+println(type("testing"))
+println(type(1234))
+println(type(true))
+println(type(false))
+println(type(["testing"]))
+
+struct Person {}
+
+println(type(Person))

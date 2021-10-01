@@ -101,14 +101,14 @@ struct Person {
     email
 }
 
-Person.set_name = fn (self, name) {
-    self.name = name
+Person.set_name = fn (this, name) {
+    this.name = name
 }
 ```
 
 Structure methods are defined outside of the definition itself. This creates an extremely flexible syntax that allows third-party scripts to modify existing structures.
 
-All instance methods must accept `self` as their first argument. This is similar to `this` or `$this` in JavaScript and PHP (respectfully), but more inline with the Rust syntax used inside of `impl` blocks.
+All instance methods must accept `this` as their first argument. This is similar to `this` or `$this` in JavaScript and PHP (respectfully).
 
 Lagoon also has support for static methods. These are methods that do not have access to `self` and instead operate in a separate context. A good exampe of a static method would be a "constructor" method:
 
