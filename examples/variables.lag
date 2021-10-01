@@ -1,1 +1,3 @@
 let age = 100
+
+println(age)

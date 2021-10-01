@@ -164,6 +164,7 @@ dependencies = [
  "lagoon_interpreter",
  "lagoon_js",
  "lagoon_parser",
+ "lagoon_vm",
  "thiserror",
 ]
 
@@ -195,6 +196,17 @@ dependencies = [
  "colored",
  "hashbrown",
  "logos",
+ "thiserror",
+]
+
+[[package]]
+name = "lagoon_vm"
+version = "0.1.0"
+dependencies = [
+ "bigdecimal",
+ "colored",
+ "hashbrown",
+ "lagoon_parser",
  "thiserror",
 ]
 

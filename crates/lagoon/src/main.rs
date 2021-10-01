@@ -3,6 +3,7 @@ use clap::{Arg, App, AppSettings};
 
 use lagoon_parser::{generate, parse};
 use lagoon_interpreter::{interpret};
+use lagoon_vm::{execute};
 
 mod cmd;
 
@@ -22,6 +23,12 @@ fn main() {
                     Arg::new("file")
                         .about("The Lagoon file to execute.")
                         .required(true)
+                )
+                .arg(
+                    Arg::new("vm")
+                        .about("Execute the script using the virtual machine (experimental).")
+                        .long("vm")
+                        .takes_value(false)
                 )
         )
         .subcommand(
@@ -49,10 +56,20 @@ fn main() {
         
         match parse(tokens) {
             Ok(ast) => {
-                match interpret(ast, path) {
-                    Ok(_) => {},
-                    Err(e) => e.print(),
-                };
+                match run.is_present("vm") {
+                    true => {
+                        match execute(ast, path) {
+                            Ok(_) => {},
+                            Err(e) => e.print(),
+                        };
+                    },
+                    false => {
+                        match interpret(ast, path) {
+                            Ok(_) => {},
+                            Err(e) => e.print(),
+                        };
+                    }
+                }
             },
             Err(e) => e.print(),
         };
