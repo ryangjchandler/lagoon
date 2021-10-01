@@ -8,4 +8,5 @@ pub enum Op {
     Get(String),
     Call(usize),
     Infix(InfixOp),
+    If(Vec<Op>, Vec<Op>),
 }

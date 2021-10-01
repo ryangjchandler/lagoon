@@ -137,6 +137,15 @@ fn run(codes: Vec<Op>, frames: &mut Vec<CallFrame>) -> Result<(), MachineResult>
                 let value = frames.last().unwrap().env().get(&name).expect(&format!("{} is not defined.", name));
                 frames.last_mut().unwrap().push(value);
             },
+            Op::If(then, otherwise) => {
+                let condition = frames.last_mut().unwrap().pop().unwrap();
+
+                if condition.to_bool() {
+                    run(then, frames)?;
+                } else {
+                    run(otherwise, frames)?;
+                }
+            }
             Op::Call(count) => {
                 let callable = frames.last_mut().unwrap().pop().unwrap();
 
@@ -221,6 +230,30 @@ fn compile(code: &mut Vec<Op>, statement: Statement) -> Result<(), MachineResult
 
             // Define the function in the current environment.
             code.push(Op::Set(name));
+        },
+        // TODO: Add support for `else` blocks.
+        Statement::If { condition, then, otherwise } => {
+            // First we need to compile the condition.
+            compile_expression(code, condition)?;
+
+            // Then we need to compile a new chunk of code that will run the
+            // truthy condition.
+            let mut then_chunk: Vec<Op> = Vec::new();
+            for statement in then {
+                compile(&mut then_chunk, statement)?;
+            }
+
+            // Then we can compile the `else` block if it's present.
+            let mut else_chunk: Vec<Op> = Vec::new();
+            if otherwise.is_some() {
+                for statement in otherwise.unwrap() {
+                    compile(&mut else_chunk, statement)?;
+                }
+            }
+
+            // Then we need to tell the engine to run this code if the previous
+            // value is the stack is truthy.
+            code.push(Op::If(then_chunk, else_chunk));
         },
         Statement::Expression { expression } => compile_expression(code, expression)?,
         _ => todo!("{:?}", statement),

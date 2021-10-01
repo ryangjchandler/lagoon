@@ -9,3 +9,12 @@ pub enum Value {
     NativeFunction(fn (Vec<Value>) -> Value),
     Function(Vec<Op>, usize),
 }
+
+impl Value {
+    pub fn to_bool(self) -> bool {
+        match self {
+            Value::Bool(b) => b,
+            _ => todo!(),
+        }
+    }
+}
