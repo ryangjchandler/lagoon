@@ -126,6 +126,8 @@ fn struct_constructor(js: &mut String, method: &str, parameters: &[String]) -> R
         js.push_str("}) {\n");
     }
 
+    js.push_str("super();");
+
     for parameter in parameters {
         js.push_str("this.");
         js.push_str(parameter);
