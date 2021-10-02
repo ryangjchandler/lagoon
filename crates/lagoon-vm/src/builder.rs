@@ -19,6 +19,12 @@ impl Builder {
     pub fn emit(&mut self, code: Code) {
         self.instructions.push(code)
     }
+
+    pub fn label(&mut self, name: impl Into<String>) -> usize {
+        let index = self.instructions.len();
+        self.labels.insert(name.into(), index);
+        index
+    }
 }
 
 impl From<Builder> for Chunk {

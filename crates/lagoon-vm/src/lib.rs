@@ -16,10 +16,7 @@ pub(crate) use chunk::Value;
 pub(crate) use frame::Frame;
 pub(crate) use native::NativeFunction;
 
-pub fn execute(program: Program) {
-    let mut compiler = Compiler::new(program.into_iter());
-    let mut chunk = compiler.compile();
-
+fn run_chunk(chunk: &mut Chunk) {
     while let Some(code) = chunk.next() {
         match code {
             Code::Pop => {
@@ -27,6 +24,18 @@ pub fn execute(program: Program) {
             },
             Code::MakeString(s) => {
                 chunk.stack.push(Value::String(s));
+            },
+            Code::MakeNumber(n) => {
+                chunk.stack.push(Value::Number(n));
+            },
+            Code::True => {
+                chunk.stack.push(Value::True);
+            },
+            Code::False => {
+                chunk.stack.push(Value::False);
+            },
+            Code::Null => {
+                chunk.stack.push(Value::Null);
             },
             Code::Set(name) => {
                 let value = chunk.stack.pop();
@@ -39,6 +48,19 @@ pub fn execute(program: Program) {
                 };
 
                 chunk.stack.push(value.unwrap());
+            },
+            Code::StartLabel(name) => {
+                let mut c = chunk.clone();
+
+                while ! matches!(c.next(), Some(Code::EndLabel(..))) {
+                    // noop.
+                }
+
+                chunk.ip = c.ip
+            },
+            Code::Return => break,
+            Code::Push(value) => {
+                chunk.stack.push(value);
             },
             Code::Call(arity) => {
                 let callable = chunk.stack.pop();
@@ -53,7 +75,19 @@ pub fn execute(program: Program) {
                             }
                         }
 
-                        callback(&mut chunk, &args)
+                        callback(chunk, &args)
+                    },
+                    Value::Label(ip) => {
+                        let original = chunk.ip;
+                        
+                        chunk.ip = ip;
+                        chunk.start_frame();
+
+                        run_chunk(chunk);
+
+                        chunk.ip = original + 1;
+
+                        Value::Null
                     },
                     _ => todo!()
                 };
@@ -63,4 +97,13 @@ pub fn execute(program: Program) {
             _ => todo!("Code: {:?}", code),
         }
     }
+}
+
+pub fn execute(program: Program) {
+    let mut compiler = Compiler::new(program.into_iter());
+    let mut chunk = compiler.compile();
+
+    dbg!(&chunk);
+
+    run_chunk(&mut chunk);
 }

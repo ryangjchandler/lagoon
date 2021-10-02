@@ -20,7 +20,7 @@ pub struct Chunk {
 impl Chunk {
     pub fn new(code: Vec<Code>, labels: HashMap<String, usize>) -> Self {
         let frames = vec![
-            Frame::new(0),
+            Frame::new(),
         ];
 
         Self {
@@ -30,6 +30,10 @@ impl Chunk {
             labels: labels,
             ip: 0,
         }
+    }
+
+    pub fn start_frame(&mut self) {
+        self.frames.push(Frame::new());
     }
 
     pub fn frame(&self) -> &Frame {
@@ -76,7 +80,7 @@ pub enum Value {
     Null,
     True,
     False,
-    Label(String),
+    Label(usize),
     NativeFunction(NativeFunction),
 }
 
@@ -98,6 +102,7 @@ impl ::std::fmt::Debug for Value {
             Value::True => "Bool(true)".to_owned(),
             Value::False => "Bool(false)".to_owned(),
             Value::Null => "Null".to_owned(),
+            Value::Label(ip) => format!("Label({})", ip),
             _ => todo!()
         })
     }

@@ -1,6 +1,8 @@
+use crate::Value;
+
 #[derive(Debug, Clone)]
 pub enum Code {
-    Push,
+    Push(Value),
     Pop,
     Set(String),
     Get(String),
@@ -10,4 +12,7 @@ pub enum Code {
     False,
     Null,
     Call(usize),
+    StartLabel(String),
+    EndLabel(String),
+    Return,
 }

@@ -9,7 +9,6 @@ pub type Refd<T> = Rc<RefCell<T>>;
 #[derive(Clone)]
 pub struct Frame {
     values: Refd<HashMap<String, Value>>,
-    ret: usize,
 }
 
 fn register_natives(env: &mut HashMap<String, Value>) {
@@ -17,14 +16,13 @@ fn register_natives(env: &mut HashMap<String, Value>) {
 }
 
 impl Frame {
-    pub fn new(ret: usize) -> Self {
+    pub fn new() -> Self {
         let mut values = HashMap::new();
 
         register_natives(&mut values);
 
         Self {
             values: Rc::new(RefCell::new(values)),
-            ret: ret
         }
     }
 

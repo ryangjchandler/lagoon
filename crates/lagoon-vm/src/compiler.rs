@@ -2,6 +2,7 @@ use lagoon_parser::*;
 use crate::Builder;
 use crate::Code;
 use crate::Chunk;
+use crate::Value;
 use std::vec::IntoIter;
 
 pub struct Compiler {
@@ -25,6 +26,37 @@ impl Compiler {
 
     fn compile_statement(&mut self, statement: Statement) {
         match statement {
+            Statement::FunctionDeclaration { name, params, body } => {
+                // Tell the executor that this is the start of a label and that
+                // it shouldn't execute any of the codes until it finds an end label.
+                self.builder.emit(Code::StartLabel(name.clone()));
+
+                // Start a new label for the function. This will return the index at which we need
+                // to point the executor when calling this function.
+                let label = self.builder.label(&name);
+                
+                // All of the parameters will be loaded into the new call frame so we can 
+                // set those too.
+                for param in params {
+                    self.builder.emit(Code::Set(param.name));
+                }
+
+                // Then we need to compile the body of the function.
+                for statement in body {
+                    self.compile_statement(statement);
+                }
+
+                // Tell the chunk to exit the execution cycle.
+                self.builder.emit(Code::Return);
+
+                // We have reached the end of the declaration and can end the label.
+                self.builder.emit(Code::EndLabel(name.clone()));
+                
+                // And finally jump back to the correct place in the original
+                // execution frame.
+                self.builder.emit(Code::Push(Value::Label(label)));
+                self.builder.emit(Code::Set(name));
+            },
             Statement::LetDeclaration { name, initial } => {
                 // We first need to check if an initial value is present for the
                 // variable.
