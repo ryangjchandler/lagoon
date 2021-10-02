@@ -9,4 +9,5 @@ pub enum Code {
     True,
     False,
     Null,
+    Call(usize),
 }
