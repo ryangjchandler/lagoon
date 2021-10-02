@@ -58,9 +58,8 @@ fn main() {
             Ok(ast) => {
                 match run.is_present("vm") {
                     true => {
-                        match execute(ast, path) {
-                            Ok(_) => {},
-                            Err(e) => e.print(),
+                        match execute(ast) {
+                            _ => (),
                         };
                     },
                     false => {
